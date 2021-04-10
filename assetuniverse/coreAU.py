@@ -340,7 +340,7 @@ class AssetUniverse:
         correlations = np.zeros(num_trials)
         for i in range(num_trials):
             keep_indices = np.random.choice(self.r.index, num_keep, replace=False)
-            correlations[i] = AU.r[[sym1, sym2]].loc[keep_indices].corr(method='pearson').values[0,1]
+            correlations[i] = self.r[[sym1, sym2]].loc[keep_indices].corr(method='pearson').values[0,1]
         fig = px.histogram(
             correlations, 
             histnorm='probability density', 
