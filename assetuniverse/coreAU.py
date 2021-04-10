@@ -18,9 +18,7 @@ import pandas_datareader.data as web
 import numpy as np
 import datetime
 import quandl as q
-import plotly.offline as pyof
-import plotly.graph_objs as go
-import plotly.tools as pytools
+import plotly.express as px
 import copy
 from alpha_vantage.timeseries import TimeSeries
 
@@ -291,72 +289,17 @@ class AssetUniverse:
             self.sym.remove(x)
 
     def plotprices(self):
-        pytools.set_credentials_file(username='dklsj5983d', api_key='OFpicNHdRhEPsAN1fgJ2')
-        pyof.init_notebook_mode()
-
-        # Plot asset prices and NAV over time
-        data = [{'x': self.p.index, 'y': self.p[col], 'name': col, 'line': {'width': 1}
-                 } for col in self.p.columns]
-
-        layout = go.Layout(title='Asset Universe Price Chart ($1 Start)', xaxis={'title': 'Date'},
-                           yaxis={'title': 'Value', 'type': 'log', 'autorange': True})
-
-        fig = go.Figure(data=data, layout=layout)
-        pyof.plot(fig, filename='priceplot.html')
-
-    def getDashLayout(self):
-        # Create and return the Dash dashboard layout
-
-        # Generate table data
-        corr_values = np.flipud(self.r.corr().values)
-        corr_text = np.around(corr_values, decimals=2)
-        cov_values = np.flipud(self.r.cov().values)
-        cov_text = np.around(cov_values*1e6, decimals=2)
-
-        # Import Dash libraries
-        import dash_core_components as dcc
-        import dash_html_components as html
-        import plotly.figure_factory as ff
-
-        layout = html.Div(children=[
-            html.H1(children='Asset Universe'),
-
-            html.Div(children='''
-                Download historical returns and calculate statistics.
-            '''),
-
-            dcc.Graph(
-                id='normalized-price-chart',
-                figure={
-                    'data': [{'x': self.p.index, 'y': self.p[col], 'name': col, 'line': {'width': 1}
-                             } for col in self.p.columns],
-                    'layout': {
-                        "title": "Asset Universe Prices ($1 Start)",
-                        "xaxis": {'title': 'Date'},
-                        "yaxis": {'title': 'Value', 'type': 'log', 'autorange': True}
-                    }
-                }
-            ),
-
-            html.H2("Correlation Matrix"),
-
-            dcc.Graph(
-                id="correlation-matrix",
-                figure=ff.create_annotated_heatmap(corr_values, x=self.sym, y=self.sym[::-1],
-                                                   annotation_text=corr_text, colorscale='Bluered')
-            ),
-
-            html.H2(children="Covariance Matrix"),
-            html.Div(children="Plotted as values*1,000,000"),
-
-            dcc.Graph(
-                id="covariance-matrix",
-                figure=ff.create_annotated_heatmap(cov_values, x=self.sym, y=self.sym[::-1],
-                                                   annotation_text=cov_text, colorscale='Bluered')
-            )
-        ])
-
-        return layout
+        """Plot asset prices over time.
+        """
+        prices = self.p.copy(deep=True)
+        prices['Date'] = prices.index
+        fig = px.line(prices, x="Date", y=self.p.columns,
+            
+              hover_data={"Date": "|%B %d, %Y"})
+        fig.update_yaxes(
+            type='log'
+        )
+        fig.show()
 
     def getindex(self, index_name):
         indices = [index for index in self.indices if index.name == index_name]
@@ -380,6 +323,34 @@ class AssetUniverse:
 
         return combinedAU
 
+    def correlation_matrix(self):
+        """Calculate the correlation matrix
+        """
+        pass
+
+    def covariance_matrix(self):
+        """Calculate the covariance matrix
+        """
+
+    def correlation_histogram(self, sym1:str, sym2:str, num_trials=1000):
+        """Calculate the histogram of the correlation coefficient between two symbols.
+        The algorithm randomly drops 10% of the dates on each iteration.
+        """
+        num_keep = int(0.9*self.r.shape[0])
+        correlations = np.zeros(num_trials)
+        for i in range(num_trials):
+            keep_indices = np.random.choice(self.r.index, num_keep, replace=False)
+            correlations[i] = AU.r[[sym1, sym2]].loc[keep_indices].corr(method='pearson').values[0,1]
+        fig = px.histogram(
+            correlations, 
+            histnorm='probability density', 
+            nbins=20,
+            range_x=[-1, 1]
+        )
+        fig.layout.xaxis.title = f'{sym1} / {sym2}'
+        fig.layout.title = 'Correlation Coefficient Histogram'
+        fig.show()
+
 
 if __name__ == "__main__":
     """end = datetime.datetime.today()
@@ -388,12 +359,15 @@ if __name__ == "__main__":
     a = AssetUniverse(start, end, symbols)
     a.plotprices()"""
 
-    days = 365.25 * 100
+    days = 365.25 * 0.25
     end = datetime.datetime.today()
     start = end - datetime.timedelta(days=days)
     #sym = ["VWELX", "DODBX", "Gold"] # Longest history
     sym = ["XOM", "AAPL"]
     AU = AssetUniverse(start, end, sym, offline=False)
+    # AU.plotprices()
+    AU.correlation_histogram(sym[0], sym[1])
+
 
 
 
