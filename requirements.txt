@@ -1,0 +1,9 @@
+yfinance
+pandas
+pandas_datareader
+numpy
+plotly
+alpha_vantage
+dash
+quandl
+gunicorn
