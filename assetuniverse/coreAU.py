@@ -323,14 +323,25 @@ class AssetUniverse:
 
         return combinedAU
 
-    def correlation_matrix(self):
+    def correlation_matrix(self, symbols=[], rand_drop_percent:float=0):
         """Calculate the correlation matrix
         """
-        pass
+        num_keep = int((1-rand_drop_percent)*self.r.shape[0])
+        keep_indices = np.random.choice(self.r.index, num_keep, replace=False)
+        if len(symbols):
+            return self.r[symbols].loc[keep_indices].corr(method='pearson').values
+        else:
+            return self.r.loc[keep_indices].corr(method='pearson').values
 
-    def covariance_matrix(self):
+    def covariance_matrix(self, symbols=[], rand_drop_percent:float=0):
         """Calculate the covariance matrix
         """
+        num_keep = int((1-rand_drop_percent)*self.r.shape[0])
+        keep_indices = np.random.choice(self.r.index, num_keep, replace=False)
+        if len(symbols):
+            return self.r[symbols].loc[keep_indices].cov().values
+        else:
+            return self.r.loc[keep_indices].cov().values
 
     def correlation_histogram(self, sym1:str, sym2:str, num_trials=1000):
         """Calculate the histogram of the correlation coefficient between two symbols.
@@ -363,10 +374,12 @@ if __name__ == "__main__":
     end = datetime.datetime.today()
     start = end - datetime.timedelta(days=days)
     #sym = ["VWELX", "DODBX", "Gold"] # Longest history
-    sym = ["XOM", "AAPL"]
+    sym = ["XOM", "AAPL", "MSFT"]
     AU = AssetUniverse(start, end, sym, offline=False)
     # AU.plotprices()
-    AU.correlation_histogram(sym[0], sym[1])
+    # AU.correlation_histogram(sym[0], sym[1])
+    print(AU.correlation_matrix())
+    print(AU.correlation_matrix(['XOM', 'MSFT']))
 
 
 
