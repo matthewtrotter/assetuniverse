@@ -24,7 +24,7 @@ from alpha_vantage.timeseries import TimeSeries
 
 class AssetUniverse:
 
-    def __init__(self, start, end, symbols, indices=None, offline=False, cashsym="VFISX", borrow_spread=1.0):
+    def __init__(self, start, end, symbols, indices=None, offline=False, cashsym="VFISX", borrow_spread=0.75):
         self.start = start
         self.end = end
         self.sym = symbols
