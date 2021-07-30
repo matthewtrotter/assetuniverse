@@ -122,6 +122,10 @@ class AssetUniverse:
             elif closesFred.size:
                 closes = closesFred
 
+            # Forward-fill cash closes
+            idx = date_range(self.start, self.end)
+            closesCash = closesCash.reindex(idx, method='ffill')
+
         # Join all closes together
         closes = closes.join(closesCash, how="inner")
         closes = closes.join(annualBorrowRate, how="left")
@@ -370,11 +374,12 @@ if __name__ == "__main__":
     a = AssetUniverse(start, end, symbols)
     a.plotprices()"""
 
-    days = 365.25 * 0.25
-    end = datetime.datetime.today()
+    days = 365
+    end = datetime.date.today()
     start = end - datetime.timedelta(days=days)
     #sym = ["VWELX", "DODBX", "Gold"] # Longest history
-    sym = ["XOM", "AAPL", "MSFT"]
+    # sym = ["XOM", "AAPL", "MSFT"]
+    sym = ['BABA', 'GOOG', 'AMZN', 'BUD', 'BRK-B', 'BTI', 'CMP', 'CLB', 'D', 'ENB', 'GILD', 'GSK', 'K', 'LMT', 'MMP', 'PM', 'CRM', 'SNY', 'TSM', 'WFC', 'YUMC', 'AAPL', 'SBUX', 'PHYS', 'INDA', 'MCHI', 'KWEB', 'CQQQ', 'EWT', 'EWG', 'VNQ', 'VNQI', 'SLV', 'ICLN', 'IBB', 'REZ', 'VHT', 'ARKK', 'ARKQ', 'ARKW', 'ARKG', 'ARKF', 'PRNT', 'IZRL', 'GELYF', 'UBT']
     AU = AssetUniverse(start, end, sym, offline=False)
     # AU.plotprices()
     # AU.correlation_histogram(sym[0], sym[1])
