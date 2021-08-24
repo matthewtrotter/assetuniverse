@@ -21,6 +21,7 @@ import quandl as q
 import plotly.express as px
 import copy
 from alpha_vantage.timeseries import TimeSeries
+from 
 
 class AssetUniverse:
 
@@ -104,7 +105,7 @@ class AssetUniverse:
             closesCash = self.generateOfflineData(self.cashsym)
             annualBorrowRate = self.generateOfflineData(self.ratesym)
         else:
-            closes = self.downloadYahooFinanceAssets(self.sym)
+            closes = self.downloadFromIB(self.sym)
             closesCash = self.downloadYahooFinanceAssets(self.cashsym)
             closesQuandl = self.downloadQuandlAssets(self.sym)
             closesFred = self.downloadFredAssets(self.sym)
@@ -164,7 +165,9 @@ class AssetUniverse:
 
         print('Done.', flush=True)
 
-    def downloadYahooFinanceAssets(self, sym):
+    def downloadFromIB(self, sym):
+        """Download historical daily closing prices from Interactive Brokers API
+        """
         # Only download assets that are not in FRED or Quandl dictionaries
         yahooFinanceSymbols = [s for s in sym if (s not in self.quandldic.keys() and s not in self.freddic.keys())]
         closes = DataFrame()
