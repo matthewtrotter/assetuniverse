@@ -3,34 +3,91 @@ Asset Universe
 
 The asset universe is a collection of historical daily returns of user-specified stocks and alternetive assets. It downloads historical data from the following sources:
 
-- [Alpha Vantage](https://www.alphavantage.co/)
+- [Interactive Brokers](https://www.interactivebrokers.com/en/home.php)
 - [Yahoo Finance](https://finance.yahoo.com/)
-- [Quandl Wiki Continuous Futures](https://www.quandl.com/data/CHRIS-Wiki-Continuous-Futures/)
 - [Federal Reserve Economic Database](https://fred.stlouisfed.org/series/GOLDAMGBD228NLBM)
+
+## Setup
+
+Install the [IB API](https://interactivebrokers.github.io/tws-api/initial_setup.html#install) to your Python environment.
+
+Open and log in to [Interactive Brokers Trader Workstation](https://www.interactivebrokers.com/en/index.php?f=14099) with the API enabled:
+1. In Configuration, go to API > Settings
+2. Check "Enable ActiveX and Socket Clients"
+3. Check "Read-Only API"
+4. Set the "Socket port" to 7496
 
 ## Installation
 
-Installation is done using ```pip``` or ```pip3```:
+Install Asset Universe using `pip`:
 
 ```bash
 git clone URL
 cd assetuniverse
-pip install .
+python3 -m pip install .
 ```
 
-## Substitutions
+## Using
 
-The asset universe will download substitute data for certain assets that are either unavailable or receive data with too many NaNs.
+Define your contracts (stocks and/or futures) as a `list` of `AssetUniverse.AssetUniverseContract` class:
+```python
+contracts = []
+contract = AssetUniverseContract(
+    secType = 'FUT',
+    currency = 'USD',
+    exchange = 'GLOBEX',
+    localSymbol = 'ESU1', # "Local Name" on the IB details page (link below)
+    data_source = 'TWS'
+)
+contracts.append(contract)
 
-As of this writing (February 2, 2018), the following substitutes exist:
-- FLBAX: TLT
-- VDIGX: VIG
-- FSIVX: ACWX
-- DFEMX: EEM
-- VBLTX: BLV
-- VGSLX: VNQ
-- FNCMX: ONEQ
-- BRK-B: BRK-A
-- INCO: INDA
-- EWS: SGF
-- VOO: SPY
+contract = AssetUniverseContract(
+    secType='FUT',
+    currency='USD',
+    exchange='ECBOT',
+    localSymbol='ZB   SEP 21',
+    data_source='TWS'
+)
+contracts.append(contract)
+
+contract = AssetUniverseContract(
+    symbol='SPY',
+    secType='STK',
+    currency='USD',
+    exchange='SMART',
+    data_source='TWS'
+)
+contracts.append(contract)
+
+contract = AssetUniverseContract(
+    symbol='AAPL',
+    secType='STK',
+    currency='USD',
+    exchange='SMART',
+    data_source='TWS' 
+)
+contracts.append(contract)
+
+contract = AssetUniverseContract(
+    symbol='SBUX',
+    secType='STK',
+    currency='USD',
+    exchange='SMART',
+    data_source='Yahoo Finance' # Alternate data source is Yahoo Finance
+)
+contracts.append(contract)
+
+# Instantiate asset universe - will start the download
+days = 365
+end = datetime.date.today()
+start = end - datetime.timedelta(days=days)
+AU = AssetUniverse(start, end, contracts, offline=False)
+
+# Plot and calculate correlations
+AU.plotprices()
+print(AU.correlation_matrix())
+print(AU.correlation_matrix(['SPY', 'ESU1']))
+```
+
+### Local Name
+[Here](https://misc.interactivebrokers.com/cstools/contract_info/v3.10/index.php?action=CONTRACT_DETAILS&clt=1&detlev=2&site=IB&sess=1630107982&mid=001&conid=428520022) is an example of the details for the ES futures contract.

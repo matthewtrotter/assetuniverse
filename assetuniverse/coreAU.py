@@ -35,12 +35,12 @@ class AssetUniverse:
         self.indices = indices
         self.offline = offline
         self.cashsym = AssetUniverseContract(
-            symbol = 'VFISX',
-            data_source = 'Yahoo Finance'
+            symbol='VFISX',
+            data_source='Yahoo Finance'
         )
         self.ratesym = AssetUniverseContract(
-            symbol = 'Fed Funds Rate',
-            data_source = 'FRED'
+            symbol='Fed Funds Rate',
+            data_source='FRED'
         )
         self.borrow_spread = borrow_spread      # Percentage points above Fed Funds Rate
 
@@ -193,7 +193,7 @@ class AssetUniverse:
         start = datetime.datetime.combine(self.start, datetime.datetime.min.time())
         end = datetime.datetime.combine(self.end, datetime.datetime.min.time())
         tws = TwsDownloadApp(twssym, start, end, False, f'{num_weeks} W', '1 day', 'TRADES')
-        tws.connect("127.0.0.1", 7497, clientId=0)
+        tws.connect("127.0.0.1", 7496, clientId=0)
         tws.run()
         return tws.closes.dropna()
 
@@ -406,60 +406,49 @@ class AssetUniverse:
 
 def _get_test_contracts() -> List[AssetUniverseContract]:
     contracts = []
-    contract = AssetUniverseContract()
-    contract.secType = 'FUT'
-    contract.currency = 'USD'
-    contract.exchange = 'GLOBEX'
-    contract.localSymbol = 'ESU1'
-    contract.data_source = 'TWS'
+    contract = AssetUniverseContract(
+        secType = 'FUT',
+        currency = 'USD',
+        exchange = 'GLOBEX',
+        localSymbol = 'ESU1',   # "Local Name" on the IB details page
+        data_source = 'TWS'
+    )
     contracts.append(contract)
 
-    contract = AssetUniverseContract()
-    contract.secType = 'FUT'
-    contract.currency = 'USD'
-    contract.exchange = 'ECBOT'
-    contract.localSymbol = 'ZB   SEP 21'
-    contract.data_source = 'TWS'
+    contract = AssetUniverseContract(
+        secType='FUT',
+        currency='USD',
+        exchange='ECBOT',
+        localSymbol='ZB   SEP 21',
+        data_source='TWS'
+    )
     contracts.append(contract)
 
-    contract = AssetUniverseContract()
-    contract.secType = 'FUT'
-    contract.currency = 'USD'
-    contract.exchange = 'ECBOT'
-    contract.localSymbol = 'ZT   SEP 21'
-    contract.data_source = 'TWS'
+    contract = AssetUniverseContract(
+        symbol='SPY',
+        secType = 'STK',
+        currency = 'USD',
+        exchange = 'SMART',
+        data_source = 'TWS'
+    )
     contracts.append(contract)
 
-    contract = AssetUniverseContract()
-    contract.symbol = 'SPY'
-    contract.secType = 'STK'
-    contract.currency = 'USD'
-    contract.exchange = 'SMART'
-    contract.data_source = 'TWS'
+    contract = AssetUniverseContract(
+        symbol='AAPL',
+        secType = 'STK',
+        currency = 'USD',
+        exchange = 'SMART',
+        data_source = 'Yahoo Finance'
+    )
     contracts.append(contract)
 
-    contract = AssetUniverseContract()
-    contract.symbol = 'AAPL'
-    contract.secType = 'STK'
-    contract.currency = 'USD'
-    contract.exchange = 'SMART'
-    contract.data_source = 'TWS'
-    contracts.append(contract)
-
-    contract = AssetUniverseContract()
-    contract.symbol = 'TLT'
-    contract.secType = 'STK'
-    contract.currency = 'USD'
-    contract.exchange = 'SMART'
-    contract.data_source = 'TWS'
-    contracts.append(contract)
-
-    contract = AssetUniverseContract()
-    contract.symbol = 'KO'
-    contract.secType = 'STK'
-    contract.currency = 'USD'
-    contract.exchange = 'SMART'
-    contract.data_source = 'TWS'
+    contract = AssetUniverseContract(
+        symbol='SBUX',
+        secType = 'STK',
+        currency = 'USD',
+        exchange = 'SMART',
+        data_source = 'Yahoo Finance'
+    )
     contracts.append(contract)
 
     return contracts
@@ -474,16 +463,14 @@ if __name__ == "__main__":
     days = 365
     end = datetime.date.today()
     start = end - datetime.timedelta(days=days)
-    #sym = ["VWELX", "DODBX", "Gold"] # Longest history
-    # sym = ["XOM", "AAPL", "MSFT"]
-    # sym = ['BABA', 'GOOG', 'AMZN', 'BUD', 'BRK-B', 'BTI', 'CMP', 'CLB', 'D', 'ENB', 'GILD', 'GSK', 'K', 'LMT', 'MMP', 'PM', 'CRM', 'SNY', 'TSM', 'WFC', 'YUMC', 'AAPL', 'SBUX', 'PHYS', 'INDA', 'MCHI', 'KWEB', 'CQQQ', 'EWT', 'EWG', 'VNQ', 'VNQI', 'SLV', 'ICLN', 'IBB', 'REZ', 'VHT', 'ARKK', 'ARKQ', 'ARKW', 'ARKG', 'ARKF', 'PRNT', 'IZRL', 'GELYF', 'UBT']
     sym = _get_test_contracts()
 
     AU = AssetUniverse(start, end, sym, offline=False)
     AU.plotprices()
     # AU.correlation_histogram(sym[0], sym[1])
     print(AU.correlation_matrix())
-    print(AU.correlation_matrix(['TLT', 'ESU1']))
+    print(AU.correlation_matrix(['SPY', 'ESU1']))
+    print(AU.correlation_matrix(['SBUX', 'ESU1']))
 
 
 

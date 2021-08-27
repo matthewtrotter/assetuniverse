@@ -198,7 +198,6 @@ if __name__ == "__main__":
     contracts = []
 
     contract = Contract()
-    # contract.symbol = s
     contract.secType = 'FUT'
     contract.currency = 'USD'
     contract.exchange = 'GLOBEX'
@@ -229,10 +228,3 @@ if __name__ == "__main__":
     app.run()
     closes = app.closes
     print(closes)
-    # queryTime = (datetime.datetime.today() - datetime.timedelta(days=180)).strftime("%Y%m%d %H:%M:%S")
-    # # queryTime = datetime.datetime.today().strftime("%Y%m%d %H:%M:%S")
-    # app.reqHistoricalData(4102, ContractSamples.USStock(), queryTime,
-    #                         "1 M", "1 day", "MIDPOINT", 1, 1, False, [])
-    # bd = BarData()
-    # app.historicalData(4102, bd)
-    # print(bd)
