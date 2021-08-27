@@ -21,18 +21,27 @@ import quandl as q
 import plotly.express as px
 import copy
 from alpha_vantage.timeseries import TimeSeries
-from 
+from ContractSamples import AssetUniverseContract
+from ibapi.contract import Contract
+from twsapi import TwsDownloadApp
+from typing import List
 
 class AssetUniverse:
 
-    def __init__(self, start, end, symbols, indices=None, offline=False, cashsym="VFISX", borrow_spread=0.75):
+    def __init__(self, start, end, symbols: List[AssetUniverseContract], indices=None, offline=False, borrow_spread=0.75):
         self.start = start
         self.end = end
         self.sym = symbols
         self.indices = indices
         self.offline = offline
-        self.cashsym = [cashsym,]
-        self.ratesym = ["Fed Funds Rate",]
+        self.cashsym = AssetUniverseContract(
+            symbol = 'VFISX',
+            data_source = 'Yahoo Finance'
+        )
+        self.ratesym = AssetUniverseContract(
+            symbol = 'Fed Funds Rate',
+            data_source = 'FRED'
+        )
         self.borrow_spread = borrow_spread      # Percentage points above Fed Funds Rate
 
         # Alpha Vantage
@@ -94,7 +103,7 @@ class AssetUniverse:
                         '10-Year Breakeven Inflation Rate': 'T10YIE',
                         'Fed Funds Rate': 'DFF',
                         '3-Month Treasury Constant Maturity Rate': 'GS3M',
-                        '1-Year Treasury Constant Maturity Rate': 'DGS1'}
+                        '1-Year Treasury Constant Maturity Rate': 'DGS1'}        
 
     def downloadData(self):
         #download total return price series from yahoo, FRED, and Quandl and convert to returns.
@@ -105,23 +114,33 @@ class AssetUniverse:
             closesCash = self.generateOfflineData(self.cashsym)
             annualBorrowRate = self.generateOfflineData(self.ratesym)
         else:
-            closes = self.downloadFromIB(self.sym)
-            closesCash = self.downloadYahooFinanceAssets(self.cashsym)
-            closesQuandl = self.downloadQuandlAssets(self.sym)
-            closesFred = self.downloadFredAssets(self.sym)
-            annualBorrowRate = self.downloadFredAssets(self.ratesym)
+            closes = self.downloadFromTws(self.sym)
+            closesYahoo = self.downloadFromYahoo(self.sym)
+            closesCash = self.downloadFromYahoo([self.cashsym])
+            # closesQuandl = self.downloadQuandlAssets(self.sym)
+            # closesFred = self.downloadFredAssets(self.sym)
+            annualBorrowRate = self.downloadFredAssets([self.ratesym])
 
+            # Join all closes together on same dates
             if closes.size:
-                if closesQuandl.size:
-                    closes = closes.join(closesQuandl, how="inner")
-                if closesFred.size:
-                    closes = closes.join(closesFred, how="inner")
-            elif closesQuandl.size:
-                closes = closesQuandl
-                if closesFred.size:
-                    closes = closes.join(closesFred, how="inner")
-            elif closesFred.size:
-                closes = closesFred
+                if closesYahoo.size:
+                    closes = closes.join(closesYahoo, how="inner")
+                # if closesQuandl.size:
+                #     closes = closes.join(closesQuandl, how="inner")
+                # if closesFred.size:
+                #     closes = closes.join(closesFred, how="inner")
+            elif closesYahoo.size:
+                closes = closesYahoo
+                # if closesQuandl.size:
+                #     closes = closes.join(closesQuandl, how="inner")
+                # if closesFred.size:
+                #     closes = closes.join(closesFred, how="inner")
+            # elif closesQuandl.size:
+            #     closes = closesQuandl
+            #     if closesFred.size:
+            #         closes = closes.join(closesFred, how="inner")
+            # elif closesFred.size:
+            #     closes = closesFred
 
             # Forward-fill cash closes
             idx = date_range(self.start, self.end)
@@ -143,8 +162,8 @@ class AssetUniverse:
         closes.dropna(axis=0, how="any", inplace=True)
 
         # Separate closes from borrow rate
-        self.rborrow = closes.loc[:, self.freddic[self.ratesym[0]]] + self.borrow_spread
-        closes = closes.drop(self.freddic[self.ratesym[0]], axis="columns")
+        self.rborrow = closes.loc[:, self.freddic[self.ratesym.symbol]] + self.borrow_spread
+        closes = closes.drop(self.freddic[self.ratesym.symbol], axis="columns")
 
         # Normalize price to start from $1
         self.originalprices = copy.deepcopy(closes)
@@ -152,24 +171,38 @@ class AssetUniverse:
             closes.iloc[:,i] = closes.iloc[:,i]/closes.iloc[0,i]
 
         # Separate cash from assets
-        self.p = closes.loc[:, self.sym+self.index_names]
-        self.pcash = closes.loc[:, self.cashsym]
+        string_syms = [s.get_symbol() for s in self.sym]
+        self.p = closes.loc[:, string_syms+self.index_names]
+        self.pcash = closes.loc[:, self.cashsym.get_symbol()]
 
         # Calculate daily returns
         self.r = self.p.pct_change()
         self.r = self.r.iloc[1:, :]  # delete first row - pct_change() returns first row as NaN
         self.rcash = self.pcash.pct_change()
-        self.rcash = self.rcash.iloc[1:, :]  # delete first row - pct_change() returns first row as NaN
+        self.rcash = self.rcash.iloc[1:]  # delete first row - pct_change() returns first row as NaN
 
         self.allsym = self.r.columns
 
         print('Done.', flush=True)
 
-    def downloadFromIB(self, sym):
-        """Download historical daily closing prices from Interactive Brokers API
+    def downloadFromTws(self, sym: AssetUniverseContract):
+        """Download historical daily closing prices from Interactive Brokers TWS API
         """
+        twssym = [s for s in sym if s.data_source == 'TWS']
+        num_weeks = np.ceil((self.end - self.start).days/7) + 1
+        start = datetime.datetime.combine(self.start, datetime.datetime.min.time())
+        end = datetime.datetime.combine(self.end, datetime.datetime.min.time())
+        tws = TwsDownloadApp(twssym, start, end, False, f'{num_weeks} W', '1 day', 'TRADES')
+        tws.connect("127.0.0.1", 7497, clientId=0)
+        tws.run()
+        return tws.closes.dropna()
+
+    
+    def downloadFromYahoo(self, sym):
         # Only download assets that are not in FRED or Quandl dictionaries
-        yahooFinanceSymbols = [s for s in sym if (s not in self.quandldic.keys() and s not in self.freddic.keys())]
+        yahooFinanceSymbols = [s.symbol for s in sym if s.data_source == 'Yahoo Finance']
+        yahooFinanceSymbols = [s for s in yahooFinanceSymbols if (s not in self.quandldic.keys() and s not in self.freddic.keys())]
+        # yahooFinanceSymbols = [s for s in sym if (s not in self.quandldic.keys() and s not in self.freddic.keys())]
         closes = DataFrame()
         if len(yahooFinanceSymbols):
             data = yf.download(yahooFinanceSymbols, interval="1d", auto_adjust=True, prepost=False, threads=True,
@@ -184,7 +217,8 @@ class AssetUniverse:
 
     def downloadQuandlAssets(self, sym):
         # Only download assets that are in the Quandl dictionary
-        quandlSymbols = [s for s in sym if s in self.quandldic.keys()]
+        quandlSymbols = [s.symbol for s in sym if s.data_source == 'Yahoo Finance']
+        quandlSymbols = [s for s in quandlSymbols if s in self.quandldic.keys()]
         closes = DataFrame()
         for symbol in quandlSymbols:
             single = self.downloadQuandlSingle(symbol)
@@ -193,7 +227,7 @@ class AssetUniverse:
 
     def downloadFredAssets(self, sym):
         # Only download assets that are in the FRED dictionary
-        fredSymbols = [s for s in sym if s in self.freddic.keys()]
+        fredSymbols = [s.symbol for s in sym if s.data_source == 'FRED']
         closes = DataFrame()
         for symbol in fredSymbols:
             closes = web.DataReader(self.freddic[symbol], 'fred', self.start, self.end+datetime.timedelta(1))
@@ -370,6 +404,66 @@ class AssetUniverse:
         fig.show()
 
 
+def _get_test_contracts() -> List[AssetUniverseContract]:
+    contracts = []
+    contract = AssetUniverseContract()
+    contract.secType = 'FUT'
+    contract.currency = 'USD'
+    contract.exchange = 'GLOBEX'
+    contract.localSymbol = 'ESU1'
+    contract.data_source = 'TWS'
+    contracts.append(contract)
+
+    contract = AssetUniverseContract()
+    contract.secType = 'FUT'
+    contract.currency = 'USD'
+    contract.exchange = 'ECBOT'
+    contract.localSymbol = 'ZB   SEP 21'
+    contract.data_source = 'TWS'
+    contracts.append(contract)
+
+    contract = AssetUniverseContract()
+    contract.secType = 'FUT'
+    contract.currency = 'USD'
+    contract.exchange = 'ECBOT'
+    contract.localSymbol = 'ZT   SEP 21'
+    contract.data_source = 'TWS'
+    contracts.append(contract)
+
+    contract = AssetUniverseContract()
+    contract.symbol = 'SPY'
+    contract.secType = 'STK'
+    contract.currency = 'USD'
+    contract.exchange = 'SMART'
+    contract.data_source = 'TWS'
+    contracts.append(contract)
+
+    contract = AssetUniverseContract()
+    contract.symbol = 'AAPL'
+    contract.secType = 'STK'
+    contract.currency = 'USD'
+    contract.exchange = 'SMART'
+    contract.data_source = 'TWS'
+    contracts.append(contract)
+
+    contract = AssetUniverseContract()
+    contract.symbol = 'TLT'
+    contract.secType = 'STK'
+    contract.currency = 'USD'
+    contract.exchange = 'SMART'
+    contract.data_source = 'TWS'
+    contracts.append(contract)
+
+    contract = AssetUniverseContract()
+    contract.symbol = 'KO'
+    contract.secType = 'STK'
+    contract.currency = 'USD'
+    contract.exchange = 'SMART'
+    contract.data_source = 'TWS'
+    contracts.append(contract)
+
+    return contracts
+
 if __name__ == "__main__":
     """end = datetime.datetime.today()
     start = end - datetime.timedelta(days=60)
@@ -382,12 +476,14 @@ if __name__ == "__main__":
     start = end - datetime.timedelta(days=days)
     #sym = ["VWELX", "DODBX", "Gold"] # Longest history
     # sym = ["XOM", "AAPL", "MSFT"]
-    sym = ['BABA', 'GOOG', 'AMZN', 'BUD', 'BRK-B', 'BTI', 'CMP', 'CLB', 'D', 'ENB', 'GILD', 'GSK', 'K', 'LMT', 'MMP', 'PM', 'CRM', 'SNY', 'TSM', 'WFC', 'YUMC', 'AAPL', 'SBUX', 'PHYS', 'INDA', 'MCHI', 'KWEB', 'CQQQ', 'EWT', 'EWG', 'VNQ', 'VNQI', 'SLV', 'ICLN', 'IBB', 'REZ', 'VHT', 'ARKK', 'ARKQ', 'ARKW', 'ARKG', 'ARKF', 'PRNT', 'IZRL', 'GELYF', 'UBT']
+    # sym = ['BABA', 'GOOG', 'AMZN', 'BUD', 'BRK-B', 'BTI', 'CMP', 'CLB', 'D', 'ENB', 'GILD', 'GSK', 'K', 'LMT', 'MMP', 'PM', 'CRM', 'SNY', 'TSM', 'WFC', 'YUMC', 'AAPL', 'SBUX', 'PHYS', 'INDA', 'MCHI', 'KWEB', 'CQQQ', 'EWT', 'EWG', 'VNQ', 'VNQI', 'SLV', 'ICLN', 'IBB', 'REZ', 'VHT', 'ARKK', 'ARKQ', 'ARKW', 'ARKG', 'ARKF', 'PRNT', 'IZRL', 'GELYF', 'UBT']
+    sym = _get_test_contracts()
+
     AU = AssetUniverse(start, end, sym, offline=False)
-    # AU.plotprices()
+    AU.plotprices()
     # AU.correlation_histogram(sym[0], sym[1])
     print(AU.correlation_matrix())
-    print(AU.correlation_matrix(['XOM', 'MSFT']))
+    print(AU.correlation_matrix(['TLT', 'ESU1']))
 
 
 

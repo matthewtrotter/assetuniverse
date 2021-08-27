@@ -3,7 +3,31 @@ Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is su
  and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable.
 """
 
+from threading import local
 from ibapi.contract import * # @UnusedWildImport
+
+
+class AssetUniverseContract(Contract):
+    def __init__(self, symbol=None, localSymbol=None, secType=None, currency=None, exchange=None, data_source=None):
+        super().__init__()
+        if symbol:
+            self.symbol = symbol
+        if localSymbol:
+            self.localSymbol = localSymbol
+        if secType:
+            self.secType = secType
+        if currency:
+            self.currency = currency
+        if exchange:
+            self.exchange = exchange
+        if data_source:
+            self.data_source = data_source
+
+    def get_symbol(self):
+        if not self.symbol and self.localSymbol:
+            return self.localSymbol
+        else:
+            return self.symbol
 
 
 class ContractSamples:
