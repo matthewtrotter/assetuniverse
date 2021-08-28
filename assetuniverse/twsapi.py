@@ -1,11 +1,8 @@
-import sys
-import argparse
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from typing import List, Optional
+from typing import List
 from collections import defaultdict
-from dateutil.parser import parse
 
 import numpy as np
 import pandas as pd
@@ -17,7 +14,6 @@ from ibapi.utils import iswrapper
 
 import datetime
 
-from ContractSamples import ContractSamples
 
 
 ContractList = List[Contract]

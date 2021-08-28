@@ -31,6 +31,7 @@ python3 -m pip install .
 
 Define your contracts (stocks and/or futures) as a `list` of `AssetUniverse.AssetUniverseContract` class:
 ```python
+from assetuniverse import AssetUniverseContract, AssetUniverse
 contracts = []
 contract = AssetUniverseContract(
     secType = 'FUT',
