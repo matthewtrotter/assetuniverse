@@ -301,6 +301,103 @@ def _get_test_contracts() -> List[AssetUniverseContract]:
 
     return contracts
 
+
+def _get_bond_futures_contracts() -> List[AssetUniverseContract]:
+    contracts = []
+
+    contract = AssetUniverseContract(
+        secType = 'FUT',
+        currency = 'USD',
+        exchange = 'ECBOT',
+        localSymbol = 'UB   SEP 21',   # "Local Name" on the IB details page
+        data_source = 'TWS'
+    )
+    contracts.append(contract)
+
+    contract = AssetUniverseContract(
+        secType = 'FUT',
+        currency = 'USD',
+        exchange = 'ECBOT',
+        localSymbol = 'TN   SEP 21',   # "Local Name" on the IB details page
+        data_source = 'TWS'
+    )
+    contracts.append(contract)
+
+    # contract = AssetUniverseContract(
+    #     secType = 'FUT',
+    #     currency = 'CAD',
+    #     exchange = 'CDE',
+    #     localSymbol = 'CGBU21',   # "Local Name" on the IB details page
+    #     data_source = 'TWS'
+    # )
+    # contracts.append(contract)
+
+    # contract = AssetUniverseContract(
+    #     secType = 'FUT',
+    #     currency = 'CAD',
+    #     exchange = 'CDE',
+    #     localSymbol = 'CGFU21',   # "Local Name" on the IB details page
+    #     data_source = 'TWS'
+    # )
+    # contracts.append(contract)
+
+    # contract = AssetUniverseContract(
+    #     secType = 'FUT',
+    #     currency = 'MXN',
+    #     exchange = 'MEXDER',
+    #     localSymbol = 'DVM10 SP21',   # "Local Name" on the IB details page
+    #     data_source = 'TWS'
+    # )
+    # contracts.append(contract)
+
+    # contract = AssetUniverseContract(
+    #     secType = 'FUT',
+    #     currency = 'KRW',
+    #     exchange = 'KSE',
+    #     localSymbol = '1671U',   # "Local Name" on the IB details page
+    #     data_source = 'TWS'
+    # )
+    # contracts.append(contract)
+
+    contract = AssetUniverseContract(
+        secType = 'FUT',
+        currency = 'EUR',
+        exchange = 'DTB',
+        localSymbol = 'FBTP SEP 21',   # "Local Name" on the IB details page
+        data_source = 'TWS'
+    )
+    contracts.append(contract)
+
+    contract = AssetUniverseContract(
+        secType = 'FUT',
+        currency = 'EUR',
+        exchange = 'DTB',
+        localSymbol = 'FGBX SEP 21',   # "Local Name" on the IB details page
+        data_source = 'TWS'
+    )
+    contracts.append(contract)
+
+    contract = AssetUniverseContract(
+        secType = 'FUT',
+        currency = 'EUR',
+        exchange = 'DTB',
+        localSymbol = 'FGBL SEP 21',   # "Local Name" on the IB details page
+        data_source = 'TWS'
+    )
+    contracts.append(contract)
+
+    contract = AssetUniverseContract(
+        secType = 'FUT',
+        currency = 'CHF',
+        exchange = 'SOFFEX',
+        localSymbol = 'CONF SEP 21',   # "Local Name" on the IB details page
+        data_source = 'TWS'
+    )
+    contracts.append(contract)
+
+    return contracts
+
+
 if __name__ == "__main__":
     """end = datetime.datetime.today()
     start = end - datetime.timedelta(days=60)
@@ -311,7 +408,8 @@ if __name__ == "__main__":
     days = 365
     end = datetime.date.today()
     start = end - datetime.timedelta(days=days)
-    sym = _get_test_contracts()
+    # sym = _get_test_contracts()
+    sym = _get_bond_futures_contracts()
 
     AU = AssetUniverse(start, end, sym, offline=False)
     AU.plotprices()
