@@ -178,9 +178,9 @@ class AssetUniverse:
         """
         prices = self.p.copy(deep=True)
         prices['Date'] = prices.index
-        fig = px.line(prices, x="Date", y=self.p.columns,
-            
-              hover_data={"Date": "|%B %d, %Y"})
+        fig = px.line(prices, x="Date", y=self.p.columns)
+        # fig = px.line(prices, x="Date", y=self.p.columns,
+        #       hover_data={"Date": "|%B %d, %Y"})
         fig.update_yaxes(
             type='log'
         )
@@ -291,11 +291,11 @@ def _get_test_contracts() -> List[AssetUniverseContract]:
     contracts.append(contract)
 
     contract = AssetUniverseContract(
-        symbol='SBUX',
+        symbol='BRK B',
         secType = 'STK',
         currency = 'USD',
         exchange = 'SMART',
-        data_source = 'Yahoo Finance'
+        data_source = 'TWS'
     )
     contracts.append(contract)
 
@@ -318,7 +318,7 @@ if __name__ == "__main__":
     # AU.correlation_histogram(sym[0], sym[1])
     print(AU.correlation_matrix())
     print(AU.correlation_matrix(['SPY', 'ESU1']))
-    print(AU.correlation_matrix(['SBUX', 'ESU1']))
+    print(AU.correlation_matrix(['BRK B', 'ESU1']))
 
 
 
