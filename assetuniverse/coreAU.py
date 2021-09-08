@@ -16,6 +16,7 @@ import copy
 import datetime
 import numpy as np
 from pandas import DataFrame, to_datetime, date_range
+import pandas as pd
 import pandas_datareader.data as web
 import plotly.express as px
 from typing import List
@@ -56,8 +57,8 @@ class AssetUniverse:
 
         if self.offline:
             closes = self.generateOfflineData(self.sym)
-            closesCash = self.generateOfflineData(self.cashsym)
-            annualBorrowRate = self.generateOfflineData(self.ratesym)
+            closesCash = self.generateOfflineData([self.cashsym])
+            annualBorrowRate = self.generateOfflineData([self.ratesym])
         else:
             closes = self.downloadFromTws(self.sym)
             closesYahoo = self.downloadFromYahoo(self.sym)
@@ -156,10 +157,12 @@ class AssetUniverse:
     def generateOfflineData(self, sym):
         # Generate random prices
         diff = self.end - self.start
-        r = np.exp(np.random.randn(diff.days + 1, len(sym))/100) + 0.00001
+        offlineSym = list()
+        offlineSym = [self.freddic.get(s.symbol, s.symbol) for s in sym]
+        r = np.exp(np.random.randn(diff.days + 1, len(offlineSym))/100) + 0.00001
         #closes = DataFrame({'Date': date_range(self.start, self.end, freq='D'),
         #                    self.sym: np.cumprod(r, axis=0)})
-        closes = DataFrame(data=np.cumprod(r, axis=0), columns=sym)
+        closes = DataFrame(data=np.cumprod(r, axis=0), columns=offlineSym)
         closes["Date"] = date_range(self.start, self.end, freq='D')
         closes = closes.set_index('Date')
         return closes
@@ -398,6 +401,28 @@ def _get_bond_futures_contracts() -> List[AssetUniverseContract]:
     return contracts
 
 
+def parse_to_contracts(assets: pd.DataFrame):
+    """Parse the symbols in the dataframe into assetuniverse contracts
+
+    Parameters
+    ----------
+    assets : pd.DataFrame
+        import from excel with assets
+    """
+    contracts = list()
+    for _, asset in assets.iterrows():
+        au_contract = AssetUniverseContract(
+            symbol=asset['symbol'],
+            localSymbol=None,#asset['localSymbol'],
+            secType=asset['secType'],
+            currency=asset['currency'],
+            exchange=asset['exchange'],
+            data_source=asset['data_source']
+        )
+        contracts.append(au_contract)
+    return contracts
+
+
 if __name__ == "__main__":
     """end = datetime.datetime.today()
     start = end - datetime.timedelta(days=60)
@@ -409,14 +434,16 @@ if __name__ == "__main__":
     end = datetime.date.today()
     start = end - datetime.timedelta(days=days)
     # sym = _get_test_contracts()
-    sym = _get_bond_futures_contracts()
+    # sym = _get_bond_futures_contracts()
+    assets = pd.read_excel('examples/assets.xlsx')
+    sym = parse_to_contracts(assets)
 
-    AU = AssetUniverse(start, end, sym, offline=False)
+    AU = AssetUniverse(start, end, sym, offline=True)
     AU.plotprices()
     # AU.correlation_histogram(sym[0], sym[1])
     print(AU.correlation_matrix())
-    print(AU.correlation_matrix(['SPY', 'ESU1']))
-    print(AU.correlation_matrix(['BRK B', 'ESU1']))
+    print(AU.correlation_matrix(['GOOG', 'UBT']))
+    print(AU.correlation_matrix(['BRK B', 'ARKW', 'AMZN']))
 
 
 
