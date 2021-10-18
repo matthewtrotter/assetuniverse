@@ -23,7 +23,7 @@ class AssetUniverseContract(Contract):
             self.data_source = data_source
 
     def get_symbol(self):
-        if not self.symbol and self.localSymbol:
+        if self.secType == 'FUT':
             return self.localSymbol
         else:
             return self.symbol

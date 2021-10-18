@@ -31,6 +31,7 @@ class AssetUniverse:
         self.start = start
         self.end = end
         self.sym = symbols
+        self.sym_list = [s.symbol for s in symbols]
         self.indices = indices
         self.offline = offline
         self.cashsym = AssetUniverseContract(

@@ -138,6 +138,7 @@ class TwsDownloadApp(TestWrapper, TestClient):
                 self.done = True
             else:
                 for contract in self.contracts:
+                    print(contract)
                     self.historicalDataRequest(contract)
 
     @iswrapper
