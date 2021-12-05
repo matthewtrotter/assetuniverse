@@ -17,44 +17,32 @@ import datetime
 import numpy as np
 from pandas import DataFrame, to_datetime, date_range
 import pandas as pd
-import pandas_datareader.data as web
 import plotly.express as px
-from typing import List
-import yfinance as yf
+from typing import List, Optional
 
-from assetuniverse.ContractSamples import AssetUniverseContract
-from assetuniverse.twsapi import TwsDownloadApp
+from assetuniverse.asset import Asset
 
 class AssetUniverse:
-
-    def __init__(self, start, end, symbols: List[AssetUniverseContract], indices=None, offline=False, borrow_spread=0.75):
+    def __init__(self, start, end, assets: List[Asset], offline=False, borrow_spread=1.5):
         self.start = start
         self.end = end
-        self.sym = symbols
-        self.sym_list = [s.symbol for s in symbols]
-        self.indices = indices
+        self.assets = assets
         self.offline = offline
-        self.cashsym = AssetUniverseContract(
-            symbol='VFISX',
-            data_source='Yahoo Finance'
-        )
-        self.ratesym = AssetUniverseContract(
-            symbol='Fed Funds Rate',
-            data_source='FRED'
-        )
+        self.cashsym = Asset(start=start, end=end, ticker='VFISX')
+        self.ratesym = Asset(start=start, end=end, ticker='Fed Funds Rate')
         self.borrow_spread = borrow_spread      # Percentage points above Fed Funds Rate
-
-        self.freddic = {'5-Year Breakeven Inflation Rate': 'T5YIE',
-                        '10-Year Breakeven Inflation Rate': 'T10YIE',
-                        'Fed Funds Rate': 'DFF',
-                        '3-Month Treasury Constant Maturity Rate': 'GS3M',
-                        '1-Year Treasury Constant Maturity Rate': 'DGS1'}        
-        self.downloadData()
+        self.download()
 
 
-    def downloadData(self):
-        #download total return price series from yahoo, FRED, and Quandl and convert to returns.
+    def download(self):
+        """Download all price and return data
+        """
         print('Downloading asset universe data... ', flush=True)
+        YahooFinanceTickers = [a.ticker for a in self.assets if a.data_source == 'Yahoo Finance']
+        FredTickers = [a.ticker for a in self.assets if a.data_source == 'FRED']
+        OfflineTickers = [a.ticker for a in self.assets if a.data_source == 'Offline']
+
+
 
         if self.offline:
             closes = self.generateOfflineData(self.sym)
@@ -114,71 +102,88 @@ class AssetUniverse:
         self.allsym = self.r.columns
         print('Done.', flush=True)
 
+    def tickers(self, include_cash=True, include_borrow_rate=True) -> List[str]:
+        """Get a list of all ticker symbols
 
-    def downloadFromTws(self, sym: AssetUniverseContract):
-        """Download historical daily closing prices from Interactive Brokers TWS API
+        Parameters
+        ----------
+        include_cash : bool, optional
+            Include the cash asset in the result, by default True
+        include_borrow_rate : bool, optional
+            Include the borrow rate in the result, by default True
+
+        Returns
+        -------
+        List[str]
+            List of ticker symbols in the asset universe
         """
-        twssym = [s for s in sym if s.data_source == 'TWS']
-        num_weeks = np.ceil((self.end - self.start).days/7) + 1
-        start = datetime.datetime.combine(self.start, datetime.datetime.min.time())
-        end = datetime.datetime.combine(self.end, datetime.datetime.min.time())
-        tws = TwsDownloadApp(twssym, start, end, False, f'{num_weeks} W', '1 day', 'TRADES')
-        tws.connect("127.0.0.1", 7496, clientId=0)
-        tws.run()
-        return tws.closes.dropna()
+        pass
 
-    
-    def downloadFromYahoo(self, sym):
-        # Only download assets that are not in FRED or Quandl dictionaries
-        yahooFinanceSymbols = [s.symbol for s in sym if s.data_source == 'Yahoo Finance']
-        yahooFinanceSymbols = [s for s in yahooFinanceSymbols if s not in self.freddic.keys()]
-        closes = DataFrame()
-        if len(yahooFinanceSymbols):
-            data = yf.download(yahooFinanceSymbols, interval="1d", auto_adjust=True, prepost=False, threads=True,
-                               start=self.start, end=self.end)
-            if len(yahooFinanceSymbols) > 1:
-                closes = DataFrame(data["Close"][yahooFinanceSymbols])
-            else:
-                closes = DataFrame(data["Close"])
-                closes = closes.rename(columns={"Close": yahooFinanceSymbols[0]})
+    def returns(self, tickers: List[str], start: datetime.date = None, end: datetime.date = None, normalize=True) -> DataFrame:
+        """Get the daily returns between start and end dates.
 
-        return closes
+        Parameters
+        ----------
+        tickers : List[str]
+            Tickers to include, by default all tickers in the AssetUniverse
+        start : datetime.date, optional
+            Start date, by default the start date of the AssetUniverse
+        end : datetime.date, optional
+            End date, by default the start date of the AssetUniverse
 
+        Returns
+        -------
+        DataFrame
+            Daily returns
+        """
+        pass
 
-    def downloadFromFred(self, sym):
-        # Only download assets that are in the FRED dictionary
-        fredSymbols = [s.symbol for s in sym if s.data_source == 'FRED']
-        closes = DataFrame()
-        for symbol in fredSymbols:
-            closes = web.DataReader(self.freddic[symbol], 'fred', self.start, self.end+datetime.timedelta(1))
-            self.__rates = True
-        return closes
+    def prices(self, tickers: List[str], start: datetime.date = None, end: datetime.date = None, normalize=True) -> DataFrame:
+        """Get the daily prices between start and end dates.
 
+        Parameters
+        ----------
+        tickers : List[str]
+            Tickers to include, by default all tickers in the AssetUniverse
+        start : datetime.date, optional
+            Start date, by default the start date of the AssetUniverse
+        end : datetime.date, optional
+            End date, by default the start date of the AssetUniverse
+        normalize : bool, optional
+            Normalize start prices to $1, by default True
 
-    def generateOfflineData(self, sym):
-        # Generate random prices
-        diff = self.end - self.start
-        offlineSym = list()
-        offlineSym = [self.freddic.get(s.symbol, s.symbol) for s in sym]
-        r = np.exp(np.random.randn(diff.days + 1, len(offlineSym))/100) + 0.00001
-        #closes = DataFrame({'Date': date_range(self.start, self.end, freq='D'),
-        #                    self.sym: np.cumprod(r, axis=0)})
-        closes = DataFrame(data=np.cumprod(r, axis=0), columns=offlineSym)
-        closes["Date"] = date_range(self.start, self.end, freq='D')
-        closes = closes.set_index('Date')
-        return closes
+        Returns
+        -------
+        DataFrame
+            Daily prices
+        """
+        pass
 
 
-    def deleteassets(self, assets):
-        # Delete the price and return data for the symbols specified
-        for x in assets:
-            self.p = self.p.drop(x, 1)
-            self.r = self.r.drop(x, 1)
-            self.sym.remove(x)
+    def delete(self, tickers: List[str] = []):
+        """Delete the tickers from the asset universe
+
+        Parameters
+        ----------
+        tickers : List[str], optional
+            Tickers to delete, by default []
+        """
+        pass
 
 
-    def plotprices(self):
-        """Plot asset prices over time.
+    def plot_prices(self, tickers: List[str], start: datetime.date = None, end: datetime.date = None, normalize=True) -> None:
+        """Plot asset prices over time
+
+        Parameters
+        ----------
+        tickers : List[str]
+            Tickers to include, by default all tickers in the AssetUniverse
+        start : datetime.date, optional
+            Start date, by default the start date of the AssetUniverse
+        end : datetime.date, optional
+            End date, by default the start date of the AssetUniverse
+        normalize : bool, optional
+            Normalize start prices to $1, by default True
         """
         prices = self.p.copy(deep=True)
         prices['Date'] = prices.index
@@ -189,11 +194,6 @@ class AssetUniverse:
             type='log'
         )
         fig.show()
-
-
-    def getindex(self, index_name):
-        indices = [index for index in self.indices if index.name == index_name]
-        return indices
 
 
     def __add__(self, other):
@@ -214,214 +214,40 @@ class AssetUniverse:
         return combinedAU
 
 
-    def correlation_matrix(self, symbols=[], rand_drop_percent:float=0):
+    def correlation_matrix(self, tickers: List[str]) -> np.ndarray:
         """Calculate the correlation matrix
+
+        Parameters
+        ----------
+        tickers : List[str]
+            Tickers to include
+
+        Returns
+        -------
+        np.ndarray
+            Correlation matrix
         """
-        num_keep = int((1-rand_drop_percent)*self.r.shape[0])
-        keep_indices = np.random.choice(self.r.index, num_keep, replace=False)
-        if len(symbols):
-            return self.r[symbols].loc[keep_indices].corr(method='pearson').values
-        else:
-            return self.r.loc[keep_indices].corr(method='pearson').values
+        pass
+        # if len(symbols):
+        #     return self.r[symbols].loc[keep_indices].corr(method='pearson').values
+        # else:
+        #     return self.r.loc[keep_indices].corr(method='pearson').values
 
 
-    def covariance_matrix(self, symbols=[], rand_drop_percent:float=0):
-        """Calculate the covariance matrix
+    def covariance_matrix(self, tickers: List[str]) -> np.ndarray:
+        """Calculate the correlation matrix
+
+        Parameters
+        ----------
+        tickers : List[str]
+            Tickers to include
+
+        Returns
+        -------
+        np.ndarray
+            Covariance matrix
         """
-        num_keep = int((1-rand_drop_percent)*self.r.shape[0])
-        keep_indices = np.random.choice(self.r.index, num_keep, replace=False)
-        if len(symbols):
-            return self.r[symbols].loc[keep_indices].cov().values
-        else:
-            return self.r.loc[keep_indices].cov().values
-
-
-    def correlation_histogram(self, sym1:str, sym2:str, num_trials=1000):
-        """Calculate the histogram of the correlation coefficient between two symbols.
-        The algorithm randomly drops 10% of the dates on each iteration.
-        """
-        num_keep = int(0.9*self.r.shape[0])
-        correlations = np.zeros(num_trials)
-        for i in range(num_trials):
-            keep_indices = np.random.choice(self.r.index, num_keep, replace=False)
-            correlations[i] = self.r[[sym1, sym2]].loc[keep_indices].corr(method='pearson').values[0,1]
-        fig = px.histogram(
-            correlations, 
-            histnorm='probability density', 
-            nbins=20,
-            range_x=[-1, 1]
-        )
-        fig.layout.xaxis.title = f'{sym1} / {sym2}'
-        fig.layout.title = 'Correlation Coefficient Histogram'
-        fig.show()
-
-
-def _get_test_contracts() -> List[AssetUniverseContract]:
-    contracts = []
-    contract = AssetUniverseContract(
-        secType = 'FUT',
-        currency = 'USD',
-        exchange = 'GLOBEX',
-        localSymbol = 'ESU1',   # "Local Name" on the IB details page
-        data_source = 'TWS'
-    )
-    contracts.append(contract)
-
-    contract = AssetUniverseContract(
-        secType='FUT',
-        currency='USD',
-        exchange='ECBOT',
-        localSymbol='ZB   SEP 21',
-        data_source='TWS'
-    )
-    contracts.append(contract)
-
-    contract = AssetUniverseContract(
-        symbol='SPY',
-        secType = 'STK',
-        currency = 'USD',
-        exchange = 'SMART',
-        data_source = 'TWS'
-    )
-    contracts.append(contract)
-
-    contract = AssetUniverseContract(
-        symbol='AAPL',
-        secType = 'STK',
-        currency = 'USD',
-        exchange = 'SMART',
-        data_source = 'Yahoo Finance'
-    )
-    contracts.append(contract)
-
-    contract = AssetUniverseContract(
-        symbol='BRK B',
-        secType = 'STK',
-        currency = 'USD',
-        exchange = 'SMART',
-        data_source = 'TWS'
-    )
-    contracts.append(contract)
-
-    return contracts
-
-
-def _get_bond_futures_contracts() -> List[AssetUniverseContract]:
-    contracts = []
-
-    contract = AssetUniverseContract(
-        secType = 'FUT',
-        currency = 'USD',
-        exchange = 'ECBOT',
-        localSymbol = 'UB   SEP 21',   # "Local Name" on the IB details page
-        data_source = 'TWS'
-    )
-    contracts.append(contract)
-
-    contract = AssetUniverseContract(
-        secType = 'FUT',
-        currency = 'USD',
-        exchange = 'ECBOT',
-        localSymbol = 'TN   SEP 21',   # "Local Name" on the IB details page
-        data_source = 'TWS'
-    )
-    contracts.append(contract)
-
-    # contract = AssetUniverseContract(
-    #     secType = 'FUT',
-    #     currency = 'CAD',
-    #     exchange = 'CDE',
-    #     localSymbol = 'CGBU21',   # "Local Name" on the IB details page
-    #     data_source = 'TWS'
-    # )
-    # contracts.append(contract)
-
-    # contract = AssetUniverseContract(
-    #     secType = 'FUT',
-    #     currency = 'CAD',
-    #     exchange = 'CDE',
-    #     localSymbol = 'CGFU21',   # "Local Name" on the IB details page
-    #     data_source = 'TWS'
-    # )
-    # contracts.append(contract)
-
-    # contract = AssetUniverseContract(
-    #     secType = 'FUT',
-    #     currency = 'MXN',
-    #     exchange = 'MEXDER',
-    #     localSymbol = 'DVM10 SP21',   # "Local Name" on the IB details page
-    #     data_source = 'TWS'
-    # )
-    # contracts.append(contract)
-
-    # contract = AssetUniverseContract(
-    #     secType = 'FUT',
-    #     currency = 'KRW',
-    #     exchange = 'KSE',
-    #     localSymbol = '1671U',   # "Local Name" on the IB details page
-    #     data_source = 'TWS'
-    # )
-    # contracts.append(contract)
-
-    contract = AssetUniverseContract(
-        secType = 'FUT',
-        currency = 'EUR',
-        exchange = 'DTB',
-        localSymbol = 'FBTP SEP 21',   # "Local Name" on the IB details page
-        data_source = 'TWS'
-    )
-    contracts.append(contract)
-
-    contract = AssetUniverseContract(
-        secType = 'FUT',
-        currency = 'EUR',
-        exchange = 'DTB',
-        localSymbol = 'FGBX SEP 21',   # "Local Name" on the IB details page
-        data_source = 'TWS'
-    )
-    contracts.append(contract)
-
-    contract = AssetUniverseContract(
-        secType = 'FUT',
-        currency = 'EUR',
-        exchange = 'DTB',
-        localSymbol = 'FGBL SEP 21',   # "Local Name" on the IB details page
-        data_source = 'TWS'
-    )
-    contracts.append(contract)
-
-    contract = AssetUniverseContract(
-        secType = 'FUT',
-        currency = 'CHF',
-        exchange = 'SOFFEX',
-        localSymbol = 'CONF SEP 21',   # "Local Name" on the IB details page
-        data_source = 'TWS'
-    )
-    contracts.append(contract)
-
-    return contracts
-
-
-def parse_to_contracts(assets: pd.DataFrame):
-    """Parse the symbols in the dataframe into assetuniverse contracts
-
-    Parameters
-    ----------
-    assets : pd.DataFrame
-        import from excel with assets
-    """
-    contracts = list()
-    for _, asset in assets.iterrows():
-        au_contract = AssetUniverseContract(
-            symbol=asset['symbol'],
-            localSymbol=None,#asset['localSymbol'],
-            secType=asset['secType'],
-            currency=asset['currency'],
-            exchange=asset['exchange'],
-            data_source=asset['data_source']
-        )
-        contracts.append(au_contract)
-    return contracts
+        pass
 
 
 if __name__ == "__main__":
