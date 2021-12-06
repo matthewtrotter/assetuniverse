@@ -20,8 +20,11 @@ import pandas as pd
 import plotly.express as px
 from typing import List, Optional
 
-from .utils.asset import Asset
-from .utils.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDownloader
+# from .utils.asset import Asset
+# from .utils.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDownloader
+
+from utils.asset import Asset
+from utils.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDownloader
 
 # from assetuniverse import Asset
 # from assetuniverse.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDownloader
@@ -32,8 +35,8 @@ class AssetUniverse:
         self.end = end
         self.assets = {asset.ticker: asset for asset in assets}
         self.offline = offline
-        self.cashasset = Asset(start=start, end=end, ticker='VFISX')
-        self.borrowrate = Asset(start=start, end=end, ticker='Fed Funds Rate', data_source='FRED')
+        self.cashasset = Asset(start=start, end=end, ticker='VFISX', display_name='Cash')
+        self.borrowrate = Asset(start=start, end=end, ticker='Fed Funds Rate', display_name='Borrow Rate', data_source='FRED')
         self.borrow_spread = borrow_spread      # Percentage points above Fed Funds Rate
         self.download()
 
@@ -134,7 +137,7 @@ class AssetUniverse:
             tickers = tickers + [self.borrowrate.ticker]
         return tickers
 
-    def returns(self, tickers: List[str]=[], start: datetime.date = None, end: datetime.date = None, normalize=True) -> DataFrame:
+    def returns(self, tickers: List[str]=[], start: datetime.date = None, end: datetime.date = None) -> DataFrame:
         """Get the daily returns between start and end dates.
 
         Parameters
@@ -162,7 +165,8 @@ class AssetUniverse:
             elif ticker == self.borrowrate.ticker:
                 returns = self.borrowrate.returns
             selected_returns.append(returns)
-        return pd.concat(selected_returns, axis=1, join='inner')
+        all_returns = pd.concat(selected_returns, axis=1, join='inner')
+        return all_returns.loc[start:end,:]
 
     def prices(self, tickers: List[str]=[], start: datetime.date = None, end: datetime.date = None, normalize=True) -> DataFrame:
         """Get the daily prices between start and end dates.
@@ -204,7 +208,8 @@ class AssetUniverse:
                 elif ticker == self.borrowrate.ticker:
                     prices = self.borrowrate.prices
                 selected_prices.append(prices)
-        return pd.concat(selected_prices, axis=1, join='inner')
+        all_prices = pd.concat(selected_prices, axis=1, join='inner')
+        return all_prices.loc[start:end,:]
 
 
     def delete(self, tickers: List[str] = []):
@@ -215,16 +220,26 @@ class AssetUniverse:
         tickers : List[str], optional
             Tickers to delete, by default []
         """
-        pass
+        if not isinstance(tickers, list):
+            raise TypeError('Provide a list of tickers to delete.')
+        for ticker in tickers:
+            if ticker == self.cashasset.ticker:
+                raise ValueError(f'Cannot delete cash asset: {ticker}')
+            if ticker == self.borrowrate.ticker:
+                raise ValueError(f'Cannot delete borrow rate: {ticker}')
+            try:
+                self.assets.pop(ticker)
+            except KeyError as exc:
+                raise KeyError(f'Could not delete requested ticker {ticker} because it doesn\'t exist in the asset universe')
 
 
-    def plot_prices(self, tickers: List[str], start: datetime.date = None, end: datetime.date = None, normalize=True) -> None:
+    def plot_prices(self, tickers: List[str] = [], start: datetime.date = None, end: datetime.date = None, normalize=True) -> None:
         """Plot asset prices over time
 
         Parameters
         ----------
         tickers : List[str]
-            Tickers to include, by default all tickers in the AssetUniverse
+            Tickers to include, by default all tickers in the AssetUniverse except the borrow rate
         start : datetime.date, optional
             Start date, by default the start date of the AssetUniverse
         end : datetime.date, optional
@@ -232,10 +247,26 @@ class AssetUniverse:
         normalize : bool, optional
             Normalize start prices to $1, by default True
         """
-        prices = self.p.copy(deep=True)
+        if len(tickers) == 0:
+            tickers = self.tickers(include_borrow_rate=False)
+        prices = self.prices(tickers, start, end, normalize)
+        renames = {}
+        for ticker, _ in prices.iteritems():
+            asset = self.assets.get(ticker, None)
+            if ticker == self.cashasset.ticker:
+                asset = self.cashasset
+            if ticker == self.borrowrate.ticker:
+                asset = self.borrowrate
+            if asset:
+                if asset.display_name:
+                    renames[ticker] = asset.display_name
+        print(renames)
+        if len(renames):
+            prices = prices.rename(columns=renames)
         prices['Date'] = prices.index
-        fig = px.line(prices, x="Date", y=self.p.columns)
-        # fig = px.line(prices, x="Date", y=self.p.columns,
+        print(prices)
+        fig = px.line(prices, x="Date", y=prices.columns)
+        # fig = px.line(prices, x="Date", y=prices.columns,
         #       hover_data={"Date": "|%B %d, %Y"})
         fig.update_yaxes(
             type='log'
@@ -261,43 +292,42 @@ class AssetUniverse:
         return combinedAU
 
 
-    def correlation_matrix(self, tickers: List[str]) -> np.ndarray:
+    def correlation_matrix(self, tickers: List[str] = []) -> np.ndarray:
         """Calculate the correlation matrix
 
         Parameters
         ----------
         tickers : List[str]
-            Tickers to include
+            Tickers to include, by default all non-cash assets
 
         Returns
         -------
         np.ndarray
             Correlation matrix
         """
-        pass
-        # if len(symbols):
-        #     return self.r[symbols].loc[keep_indices].corr(method='pearson').values
-        # else:
-        #     return self.r.loc[keep_indices].corr(method='pearson').values
+        if len(tickers) == 0:
+            tickers = self.tickers(include_cash=False, include_borrow_rate=False)
+        returns = self.returns(tickers, start, end)
+        return returns.corr(method='pearson')
 
 
-    def covariance_matrix(self, tickers: List[str]) -> np.ndarray:
+    def covariance_matrix(self, tickers: List[str] = []) -> np.ndarray:
         """Calculate the correlation matrix
 
         Parameters
         ----------
         tickers : List[str]
-            Tickers to include
+            Tickers to include, by default all non-cash assets
 
         Returns
         -------
         np.ndarray
             Covariance matrix
         """
-        pass
-
-
-
+        if len(tickers) == 0:
+            tickers = self.tickers(include_cash=False, include_borrow_rate=False)
+        returns = self.returns(tickers, start, end)
+        return returns.cov()
 
 
 if __name__ == "__main__":
@@ -312,13 +342,14 @@ if __name__ == "__main__":
     start = end - datetime.timedelta(days=days)
     assets = [
         Asset(start, end, 'AAPL'),
-        Asset(start, end, 'CL=F'),
+        Asset(start, end, 'CL=F', display_name='Oil'),
         Asset(start, end, 'EURUSD=X'),
     ]
 
     AU = AssetUniverse(start, end, assets)
-    AU.plotprices()
-    # AU.correlation_histogram(sym[0], sym[1])
+    AU.plot_prices()
+
     print(AU.correlation_matrix())
-    print(AU.correlation_matrix(['GOOG', 'UBT']))
-    print(AU.correlation_matrix(['BRK B', 'ARKW', 'AMZN']))
+    print(AU.correlation_matrix(['AAPL', 'CL=F']))
+    print(AU.correlation_matrix(['EURUSD=X', 'AAPL']))
+    print(AU.covariance_matrix(['EURUSD=X', 'AAPL']))

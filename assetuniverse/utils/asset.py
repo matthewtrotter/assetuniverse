@@ -10,6 +10,7 @@ class Asset:
         end: datetime.date = datetime.date.today()-datetime.timedelta(days=180),
         ticker: str = 'AAPL',
         alternate_tickers: List[str] = [],
+        display_name: str = None,
         downloader_definition: Dict = {},
         data_source: str = 'Yahoo Finance'
         ) -> None:
@@ -17,6 +18,7 @@ class Asset:
         self.end = end
         self.ticker = ticker
         self.alternate_tickers = alternate_tickers
+        self.display_name = display_name or ticker
         self.downloader_definition = downloader_definition
         if data_source not in VALID_DATA_SOURCES:
             raise ValueError(f'Data source {data_source} is not valid. Must be one of: {VALID_DATA_SOURCES}')
@@ -39,3 +41,10 @@ class Asset:
         self.returns = self.prices.pct_change()
         self.returns = self.returns[1:]  # delete first row - pct_change() returns first row as NaN
 
+    def __str__(self):
+        result = f'{self.ticker}, '
+        if len(self.alternate_tickers):
+            alternate_names = ', '.join([t for t in self.alternate_tickers])
+            result = result + f'\t\talternate names: {alternate_names},\t'
+        result = result + f'\t\tdisplays as {self.display_name} - {self.data_source}'
+        return result

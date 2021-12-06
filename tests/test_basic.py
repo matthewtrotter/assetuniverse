@@ -7,7 +7,6 @@ import assetuniverse.assetuniverse
 # from assetuniverse import Asset
 
 def test_basic():
-    print(dir(assetuniverse))
     days = 365
     end = datetime.date.today()
     start = end - datetime.timedelta(days=days)
@@ -32,3 +31,8 @@ def test_basic():
     p = AU.prices(normalize=True)
     assert (p.iloc[0,:] == 1.0).all(), 'Normalized prices should start at $1'
 
+    pre_delete_tickers = AU.tickers()
+    AU.delete(tickers[:2])
+    assert AU.tickers() == pre_delete_tickers[2:], f'Did not delete {tickers[0]} correctly.'
+    with pytest.raises(KeyError, match='Could not delete requested ticker*'):
+        AU.delete(['does not exist'])
