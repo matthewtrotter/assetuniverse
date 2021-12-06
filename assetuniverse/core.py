@@ -20,87 +20,97 @@ import pandas as pd
 import plotly.express as px
 from typing import List, Optional
 
-from assetuniverse.asset import Asset
+from .utils.asset import Asset
+from .utils.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDownloader
+
+# from assetuniverse import Asset
+# from assetuniverse.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDownloader
 
 class AssetUniverse:
     def __init__(self, start, end, assets: List[Asset], offline=False, borrow_spread=1.5):
         self.start = start
         self.end = end
-        self.assets = assets
+        self.assets = {asset.ticker: asset for asset in assets}
         self.offline = offline
-        self.cashsym = Asset(start=start, end=end, ticker='VFISX')
-        self.ratesym = Asset(start=start, end=end, ticker='Fed Funds Rate')
+        self.cashasset = Asset(start=start, end=end, ticker='VFISX')
+        self.borrowrate = Asset(start=start, end=end, ticker='Fed Funds Rate', data_source='FRED')
         self.borrow_spread = borrow_spread      # Percentage points above Fed Funds Rate
         self.download()
 
 
-    def download(self):
-        """Download all price and return data
+    def download(self) -> None:
+        """Download all price and return data for all assets
         """
         print('Downloading asset universe data... ', flush=True)
-        YahooFinanceTickers = [a.ticker for a in self.assets if a.data_source == 'Yahoo Finance']
-        FredTickers = [a.ticker for a in self.assets if a.data_source == 'FRED']
-        OfflineTickers = [a.ticker for a in self.assets if a.data_source == 'Offline']
+        
+        # Separate tickers into separate downloader lists
+        YahooFinanceTickers = [a.ticker for a in self.assets.values() if a.data_source == 'Yahoo Finance']
+        YahooFinanceTickers = YahooFinanceTickers + [self.cashasset.ticker]
+        FredTickers = [a.ticker for a in self.assets.values() if a.data_source == 'FRED']
+        FredTickers = FredTickers + [self.borrowrate.ticker]
+        OfflineTickers = [a.ticker for a in self.assets.values() if a.data_source == 'Offline']
 
+        # Download
+        yfd = YahooFinanceDownloader(self.start, self.end, YahooFinanceTickers)
+        fd = FredDownloader(self.start, self.end, FredTickers)
+        od = OfflineDownloader(self.start, self.end, OfflineTickers)
+        prices_list = [
+            yfd.download(),
+            fd.download(),
+            od.download()
+        ]
 
+        # Join all closes together on same date axis
+        joined_prices = self._join_prices(prices_list)
 
-        if self.offline:
-            closes = self.generateOfflineData(self.sym)
-            closesCash = self.generateOfflineData([self.cashsym])
-            annualBorrowRate = self.generateOfflineData([self.ratesym])
-        else:
-            closes = self.downloadFromTws(self.sym)
-            closesYahoo = self.downloadFromYahoo(self.sym)
-            closesCash = self.downloadFromYahoo([self.cashsym])
-            annualBorrowRate = self.downloadFromFred([self.ratesym])
+        # Rename cash and borrow rate
+        cashname = 'Cash'
+        borrowname = 'Borrow Rate'
+        joined_prices = joined_prices.rename(columns={self.cashasset.ticker: cashname, self.borrowrate.ticker: borrowname})
+        self.cashasset.ticker = cashname
+        self.borrowrate.ticker = borrowname
 
-            # Join all closes together on same dates
-            if closes.size:
-                if closesYahoo.size:
-                    closes = closes.join(closesYahoo, how="inner")
-            elif closesYahoo.size:
-                closes = closesYahoo
+        # Add spread to borrow rate
+        joined_prices.loc[:, self.borrowrate.ticker] = joined_prices.loc[:, self.borrowrate.ticker] + self.borrow_spread
 
-            # Forward-fill cash closes
-            idx = date_range(self.start, self.end)
-            closesCash = closesCash.reindex(idx, method='ffill')
+        # Assign prices to each asset individually
+        for asset in self.assets.values():
+            asset.assign_prices(joined_prices[asset.ticker])
+        self.cashasset.assign_prices(joined_prices[self.cashasset.ticker])
+        self.borrowrate.assign_prices(joined_prices[self.borrowrate.ticker])
+        print('Done.', flush=True)
 
+    def _join_prices(self, prices_list: List[pd.DataFrame]) -> pd.DataFrame:
+        """Join the prices of the raw downloaded data to have the same dates.
+
+        Parameters
+        ----------
+        prices : List[pd.DataFrame]
+            List of prices
+
+        Returns
+        -------
+        pd.DataFrame
+            Joined prices on same date axis
+        """
         # Join all closes together
-        closes = closes.join(closesCash, how="inner")
-        closes = closes.join(annualBorrowRate, how="left")
-        self.index_names = []
-        if self.indices is not None:
-            for index in self.indices:
-                closes = closes.join(index.p, how="inner")
-            self.index_names = list(index.name for index in self.indices)
+        joined_prices = pd.DataFrame()
+        joined_prices = prices_list[0]
+        for prices in prices_list[1:]:
+            if not prices.empty:
+                joined_prices = joined_prices.join(prices, how='inner')
+        # closes = closes.join(annualBorrowRate, how='left')    # Do I need this for the borrow rate? Different than how='inner'
 
         # Forward fill all the NaNs and zeros
-        closes[closes == 0] = np.nan
-        closes.fillna(method="ffill", inplace=True)
-        closes.dropna(axis=0, how="any", inplace=True)
+        joined_prices[joined_prices == 0] = np.nan
+        joined_prices.fillna(method="ffill", inplace=True)
+        joined_prices.dropna(axis=0, how="any", inplace=True)
 
-        # Separate closes from borrow rate
-        self.rborrow = closes.loc[:, self.freddic[self.ratesym.symbol]] + self.borrow_spread
-        closes = closes.drop(self.freddic[self.ratesym.symbol], axis="columns")
+        # # Forward-fill cash closes - Do I need this part?
+        # idx = date_range(self.start, self.end)
+        # closesCash = closesCash.reindex(idx, method='ffill')
 
-        # Normalize price to start from $1
-        self.originalprices = copy.deepcopy(closes)
-        for i in range(0, len(closes.columns)):
-            closes.iloc[:,i] = closes.iloc[:,i]/closes.iloc[0,i]
-
-        # Separate cash from assets
-        string_syms = [s.get_symbol() for s in self.sym]
-        self.p = closes.loc[:, string_syms+self.index_names]
-        self.pcash = closes.loc[:, self.cashsym.get_symbol()]
-
-        # Calculate daily returns
-        self.r = self.p.pct_change()
-        self.r = self.r.iloc[1:, :]  # delete first row - pct_change() returns first row as NaN
-        self.rcash = self.pcash.pct_change()
-        self.rcash = self.rcash.iloc[1:]  # delete first row - pct_change() returns first row as NaN
-
-        self.allsym = self.r.columns
-        print('Done.', flush=True)
+        return joined_prices
 
     def tickers(self, include_cash=True, include_borrow_rate=True) -> List[str]:
         """Get a list of all ticker symbols
@@ -117,9 +127,14 @@ class AssetUniverse:
         List[str]
             List of ticker symbols in the asset universe
         """
-        pass
+        tickers = list(self.assets.keys())
+        if include_cash:
+            tickers = tickers + [self.cashasset.ticker]
+        if include_borrow_rate:
+            tickers = tickers + [self.borrowrate.ticker]
+        return tickers
 
-    def returns(self, tickers: List[str], start: datetime.date = None, end: datetime.date = None, normalize=True) -> DataFrame:
+    def returns(self, tickers: List[str]=[], start: datetime.date = None, end: datetime.date = None, normalize=True) -> DataFrame:
         """Get the daily returns between start and end dates.
 
         Parameters
@@ -134,11 +149,22 @@ class AssetUniverse:
         Returns
         -------
         DataFrame
-            Daily returns
+            Selected daily returns
         """
-        pass
+        if len(tickers) == 0:
+            tickers = list(self.assets.keys()) + [self.cashasset.ticker, self.borrowrate.ticker]
+        selected_returns = []
+        for ticker in tickers:
+            if ticker in self.assets.keys():
+                returns = self.assets[ticker].returns
+            elif ticker == self.cashasset.ticker:
+                returns = self.cashasset.returns
+            elif ticker == self.borrowrate.ticker:
+                returns = self.borrowrate.returns
+            selected_returns.append(returns)
+        return pd.concat(selected_returns, axis=1, join='inner')
 
-    def prices(self, tickers: List[str], start: datetime.date = None, end: datetime.date = None, normalize=True) -> DataFrame:
+    def prices(self, tickers: List[str]=[], start: datetime.date = None, end: datetime.date = None, normalize=True) -> DataFrame:
         """Get the daily prices between start and end dates.
 
         Parameters
@@ -157,7 +183,28 @@ class AssetUniverse:
         DataFrame
             Daily prices
         """
-        pass
+        if len(tickers) == 0:
+            tickers = list(self.assets.keys()) + [self.cashasset.ticker, self.borrowrate.ticker]
+        selected_prices = []
+        if normalize == True:
+            for ticker in tickers:
+                if ticker in self.assets.keys():
+                    prices_normalized = self.assets[ticker].prices_normalized
+                elif ticker == self.cashasset.ticker:
+                    prices_normalized = self.cashasset.prices_normalized
+                elif ticker == self.borrowrate.ticker:
+                    prices_normalized = self.borrowrate.prices_normalized
+                selected_prices.append(prices_normalized)
+        else:
+            for ticker in tickers:
+                if ticker in self.assets.keys():
+                    prices = self.assets[ticker].prices
+                elif ticker == self.cashasset.ticker:
+                    prices = self.cashasset.prices
+                elif ticker == self.borrowrate.ticker:
+                    prices = self.borrowrate.prices
+                selected_prices.append(prices)
+        return pd.concat(selected_prices, axis=1, join='inner')
 
 
     def delete(self, tickers: List[str] = []):
@@ -250,6 +297,9 @@ class AssetUniverse:
         pass
 
 
+
+
+
 if __name__ == "__main__":
     """end = datetime.datetime.today()
     start = end - datetime.timedelta(days=60)
@@ -260,18 +310,15 @@ if __name__ == "__main__":
     days = 365
     end = datetime.date.today()
     start = end - datetime.timedelta(days=days)
-    # sym = _get_test_contracts()
-    # sym = _get_bond_futures_contracts()
-    assets = pd.read_excel('examples/assets.xlsx')
-    sym = parse_to_contracts(assets)
+    assets = [
+        Asset(start, end, 'AAPL'),
+        Asset(start, end, 'CL=F'),
+        Asset(start, end, 'EURUSD=X'),
+    ]
 
-    AU = AssetUniverse(start, end, sym, offline=True)
+    AU = AssetUniverse(start, end, assets)
     AU.plotprices()
     # AU.correlation_histogram(sym[0], sym[1])
     print(AU.correlation_matrix())
     print(AU.correlation_matrix(['GOOG', 'UBT']))
     print(AU.correlation_matrix(['BRK B', 'ARKW', 'AMZN']))
-
-
-
-

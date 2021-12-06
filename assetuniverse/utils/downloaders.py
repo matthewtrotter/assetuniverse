@@ -49,6 +49,7 @@ class FredDownloader(Downloader):
                 self.start, 
                 self.end+datetime.timedelta(1)
                 )
+            closes = closes.rename(columns={closes.columns[0]: ticker})
         return closes
 
 

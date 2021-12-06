@@ -28,67 +28,7 @@ python3 -m pip install .
 ```
 
 ## Using
+asdf
 
-Define your contracts (stocks and/or futures) as a `list` of `AssetUniverse.AssetUniverseContract` class:
-```python
-from assetuniverse import AssetUniverseContract, AssetUniverse
-contracts = []
-contract = AssetUniverseContract(
-    secType = 'FUT',
-    currency = 'USD',
-    exchange = 'GLOBEX',
-    localSymbol = 'ESU1', # "Local Name" on the IB details page (link below)
-    data_source = 'TWS'
-)
-contracts.append(contract)
-
-contract = AssetUniverseContract(
-    secType='FUT',
-    currency='USD',
-    exchange='ECBOT',
-    localSymbol='ZB   SEP 21',
-    data_source='TWS'
-)
-contracts.append(contract)
-
-contract = AssetUniverseContract(
-    symbol='SPY',
-    secType='STK',
-    currency='USD',
-    exchange='SMART',
-    data_source='TWS'
-)
-contracts.append(contract)
-
-contract = AssetUniverseContract(
-    symbol='AAPL',
-    secType='STK',
-    currency='USD',
-    exchange='SMART',
-    data_source='TWS' 
-)
-contracts.append(contract)
-
-contract = AssetUniverseContract(
-    symbol='SBUX',
-    secType='STK',
-    currency='USD',
-    exchange='SMART',
-    data_source='Yahoo Finance' # Alternate data source is Yahoo Finance
-)
-contracts.append(contract)
-
-# Instantiate asset universe - will start the download
-days = 365
-end = datetime.date.today()
-start = end - datetime.timedelta(days=days)
-AU = AssetUniverse(start, end, contracts, offline=False)
-
-# Plot and calculate correlations
-AU.plotprices()
-print(AU.correlation_matrix())
-print(AU.correlation_matrix(['SPY', 'ESU1']))
-```
-
-### Local Name
-[Here](https://misc.interactivebrokers.com/cstools/contract_info/v3.10/index.php?action=CONTRACT_DETAILS&clt=1&detlev=2&site=IB&sess=1630107982&mid=001&conid=428520022) is an example of the details for the ES futures contract.
+## Testing
+In the project root directory, run `python3 -m pytest tests`
