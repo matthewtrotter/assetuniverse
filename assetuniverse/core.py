@@ -20,11 +20,13 @@ import pandas as pd
 import plotly.express as px
 from typing import List, Optional
 
-# from .utils.asset import Asset
-# from .utils.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDownloader
+# Use these when importing assetuniverse as a library
+from .utils.asset import Asset
+from .utils.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDownloader
 
-from utils.asset import Asset
-from utils.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDownloader
+# Use these when running core.py as main
+# from utils.asset import Asset
+# from utils.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDownloader
 
 # from assetuniverse import Asset
 # from assetuniverse.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDownloader
