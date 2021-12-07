@@ -30,6 +30,10 @@ def test_basic():
     assert not (p.iloc[0,:] == 1.0).any(), 'Prices should not start at $1'
     p = AU.prices(normalize=True)
     assert (p.iloc[0,:] == 1.0).all(), 'Normalized prices should start at $1'
+    with pytest.raises(ValueError, match='not in the asset universe'):
+        AU.prices(['ABCDEFG'])
+    with pytest.raises(ValueError, match='not in the asset universe'):
+        AU.returns(['ABCDEFG'])
 
     pre_delete_tickers = AU.tickers()
     AU.delete(tickers[:2])

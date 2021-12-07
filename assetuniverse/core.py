@@ -166,6 +166,8 @@ class AssetUniverse:
                 returns = self.cashasset.returns
             elif ticker == self.borrowrate.ticker:
                 returns = self.borrowrate.returns
+            else:
+                raise ValueError(f'Ticker {ticker} not in the asset universe: {self.tickers()}')
             selected_returns.append(returns)
         all_returns = pd.concat(selected_returns, axis=1, join='inner')
         return all_returns.loc[start:end,:]
@@ -187,7 +189,7 @@ class AssetUniverse:
         Returns
         -------
         DataFrame
-            Daily prices
+            Selected daily prices
         """
         if len(tickers) == 0:
             tickers = list(self.assets.keys()) + [self.cashasset.ticker, self.borrowrate.ticker]
@@ -200,6 +202,8 @@ class AssetUniverse:
                     prices_normalized = self.cashasset.prices_normalized
                 elif ticker == self.borrowrate.ticker:
                     prices_normalized = self.borrowrate.prices_normalized
+                else:
+                    raise ValueError(f'Ticker {ticker} not in the asset universe: {self.tickers()}')
                 selected_prices.append(prices_normalized)
         else:
             for ticker in tickers:
@@ -209,6 +213,8 @@ class AssetUniverse:
                     prices = self.cashasset.prices
                 elif ticker == self.borrowrate.ticker:
                     prices = self.borrowrate.prices
+                else:
+                    raise ValueError(f'Ticker {ticker} not in the asset universe: {self.tickers()}')
                 selected_prices.append(prices)
         all_prices = pd.concat(selected_prices, axis=1, join='inner')
         return all_prices.loc[start:end,:]
