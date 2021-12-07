@@ -178,7 +178,7 @@ class AssetUniverse:
         start : datetime.date, optional
             Start date, by default the start date of the AssetUniverse
         end : datetime.date, optional
-            End date, by default the start date of the AssetUniverse
+            End date, by default the end date of the AssetUniverse
         normalize : bool, optional
             Normalize start prices to $1, by default True
 
@@ -243,7 +243,7 @@ class AssetUniverse:
         start : datetime.date, optional
             Start date, by default the start date of the AssetUniverse
         end : datetime.date, optional
-            End date, by default the start date of the AssetUniverse
+            End date, by default the end date of the AssetUniverse
         normalize : bool, optional
             Normalize start prices to $1, by default True
         """
@@ -260,11 +260,9 @@ class AssetUniverse:
             if asset:
                 if asset.display_name:
                     renames[ticker] = asset.display_name
-        print(renames)
         if len(renames):
             prices = prices.rename(columns=renames)
         prices['Date'] = prices.index
-        print(prices)
         fig = px.line(prices, x="Date", y=prices.columns)
         # fig = px.line(prices, x="Date", y=prices.columns,
         #       hover_data={"Date": "|%B %d, %Y"})
@@ -292,13 +290,17 @@ class AssetUniverse:
         return combinedAU
 
 
-    def correlation_matrix(self, tickers: List[str] = []) -> np.ndarray:
+    def correlation_matrix(self, tickers: List[str] = [], start: datetime.date = None, end: datetime.date = None) -> np.ndarray:
         """Calculate the correlation matrix
 
         Parameters
         ----------
         tickers : List[str]
             Tickers to include, by default all non-cash assets
+        start : datetime.date, optional
+            Start date, by default the start date of the AssetUniverse
+        end : datetime.date, optional
+            End date, by default the end date of the AssetUniverse
 
         Returns
         -------
@@ -311,13 +313,17 @@ class AssetUniverse:
         return returns.corr(method='pearson')
 
 
-    def covariance_matrix(self, tickers: List[str] = []) -> np.ndarray:
+    def covariance_matrix(self, tickers: List[str] = [], start: datetime.date = None, end: datetime.date = None) -> np.ndarray:
         """Calculate the correlation matrix
 
         Parameters
         ----------
         tickers : List[str]
             Tickers to include, by default all non-cash assets
+        start : datetime.date, optional
+            Start date, by default the start date of the AssetUniverse
+        end : datetime.date, optional
+            End date, by default the end date of the AssetUniverse
 
         Returns
         -------
@@ -337,7 +343,7 @@ if __name__ == "__main__":
     a = AssetUniverse(start, end, symbols)
     a.plotprices()"""
 
-    days = 365
+    days = 2*365
     end = datetime.date.today()
     start = end - datetime.timedelta(days=days)
     assets = [
@@ -350,6 +356,12 @@ if __name__ == "__main__":
     AU.plot_prices()
 
     print(AU.correlation_matrix())
-    print(AU.correlation_matrix(['AAPL', 'CL=F']))
+    print(AU.correlation_matrix(
+        ['AAPL', 'CL=F'], 
+        start=end - datetime.timedelta(days=30)
+        ))
+    print(AU.correlation_matrix(
+        ['AAPL', 'CL=F']
+        ))
     print(AU.correlation_matrix(['EURUSD=X', 'AAPL']))
     print(AU.covariance_matrix(['EURUSD=X', 'AAPL']))
