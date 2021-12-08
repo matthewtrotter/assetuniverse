@@ -40,8 +40,6 @@ class AssetUniverse:
         self.cashasset = Asset(start=start, end=end, ticker='VFISX', display_name='Cash')
         self.borrowrate = Asset(start=start, end=end, ticker='Fed Funds Rate', display_name='Borrow Rate', data_source='FRED')
         self.borrow_spread = borrow_spread      # Percentage points above Fed Funds Rate
-        self.download()
-
 
     def download(self) -> None:
         """Download all price and return data for all assets
