@@ -50,6 +50,12 @@ class FredDownloader(Downloader):
                 self.end+datetime.timedelta(1)
                 )
             closes = closes.rename(columns={closes.columns[0]: ticker})
+
+            # Reindex tickers that aren't updated often
+            if ticker in ['Fed Funds Rate',]:
+                idx = date_range(start=self.start, end=self.end, freq='D')
+                closes = closes.reindex(idx)
+                closes.fillna(method="ffill", inplace=True)
         return closes
 
 

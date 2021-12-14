@@ -73,8 +73,10 @@ class AssetUniverse:
         self.cashasset.ticker = cashname
         self.borrowrate.ticker = borrowname
 
-        # Add spread to borrow rate
+        # Add spread to borrow rate and convert to "borrow price"
         joined_prices.loc[:, self.borrowrate.ticker] = joined_prices.loc[:, self.borrowrate.ticker] + self.borrow_spread
+        daily_borrow_rate = (1 + joined_prices.loc[:, self.borrowrate.ticker]/100)**(1/252)
+        joined_prices.loc[:, self.borrowrate.ticker] = daily_borrow_rate.cumprod()
 
         # Assign prices to each asset individually
         for asset in self.assets.values():
@@ -349,7 +351,7 @@ if __name__ == "__main__":
     a = AssetUniverse(start, end, symbols)
     a.plotprices()"""
 
-    days = 2*365
+    days = 365
     end = datetime.date.today()
     start = end - datetime.timedelta(days=days)
     assets = [
@@ -359,15 +361,18 @@ if __name__ == "__main__":
     ]
 
     AU = AssetUniverse(start, end, assets)
-    AU.plot_prices()
+    AU.download()
+    # AU.plot_prices()
 
-    print(AU.correlation_matrix())
-    print(AU.correlation_matrix(
-        ['AAPL', 'CL=F'], 
-        start=end - datetime.timedelta(days=30)
-        ))
-    print(AU.correlation_matrix(
-        ['AAPL', 'CL=F']
-        ))
-    print(AU.correlation_matrix(['EURUSD=X', 'AAPL']))
-    print(AU.covariance_matrix(['EURUSD=X', 'AAPL']))
+    print(AU.returns())
+
+    # print(AU.correlation_matrix())
+    # print(AU.correlation_matrix(
+    #     ['AAPL', 'CL=F'], 
+    #     start=end - datetime.timedelta(days=30)
+    #     ))
+    # print(AU.correlation_matrix(
+    #     ['AAPL', 'CL=F']
+    #     ))
+    # print(AU.correlation_matrix(['EURUSD=X', 'AAPL']))
+    # print(AU.covariance_matrix(['EURUSD=X', 'AAPL']))
