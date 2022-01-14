@@ -32,16 +32,14 @@ from .utils.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDo
 # from assetuniverse.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDownloader
 
 class AssetUniverse:
-    def __init__(self, start, end, assets: List[Asset], offline=False, borrow_spread=1.5):
+    def __init__(self, start, end, assets: List[Asset], cashasset:Asset, offline=False, borrow_spread=1.5):
         self.start = start
         self.end = end
         self.assets = {asset.ticker: asset for asset in assets}
         self.offline = offline
-        self.cashasset = Asset(start=start, end=end, ticker='VFISX', display_name='Cash')
+        self.cashasset = cashasset#Asset(start=start, end=end, ticker='VFISX', display_name='Cash')
         self.borrowrate = Asset(start=start, end=end, ticker='Fed Funds Rate', display_name='Borrow Rate', data_source='FRED')
         self.borrow_spread = borrow_spread      # Percentage points above Fed Funds Rate
-        self.download()
-
 
     def download(self) -> None:
         """Download all price and return data for all assets
@@ -50,7 +48,8 @@ class AssetUniverse:
         
         # Separate tickers into separate downloader lists
         YahooFinanceTickers = [a.ticker for a in self.assets.values() if a.data_source == 'Yahoo Finance']
-        YahooFinanceTickers = YahooFinanceTickers + [self.cashasset.ticker]
+        if self.cashasset.ticker:
+            YahooFinanceTickers = YahooFinanceTickers + [self.cashasset.ticker]
         FredTickers = [a.ticker for a in self.assets.values() if a.data_source == 'FRED']
         FredTickers = FredTickers + [self.borrowrate.ticker]
         OfflineTickers = [a.ticker for a in self.assets.values() if a.data_source == 'Offline']
@@ -71,17 +70,27 @@ class AssetUniverse:
         # Rename cash and borrow rate
         cashname = 'Cash'
         borrowname = 'Borrow Rate'
-        joined_prices = joined_prices.rename(columns={self.cashasset.ticker: cashname, self.borrowrate.ticker: borrowname})
-        self.cashasset.ticker = cashname
+        joined_prices = joined_prices.rename(columns={self.borrowrate.ticker: borrowname})
         self.borrowrate.ticker = borrowname
+        if self.cashasset.ticker:
+            joined_prices = joined_prices.rename(columns={self.cashasset.ticker: cashname})
+            self.cashasset.ticker = cashname
 
-        # Add spread to borrow rate
+        # Add spread to borrow rate and convert to "borrow price"
         joined_prices.loc[:, self.borrowrate.ticker] = joined_prices.loc[:, self.borrowrate.ticker] + self.borrow_spread
+        daily_borrow_rate = (1 + joined_prices.loc[:, self.borrowrate.ticker]/100)**(1/252)
+        joined_prices.loc[:, self.borrowrate.ticker] = daily_borrow_rate.cumprod()
 
         # Assign prices to each asset individually
         for asset in self.assets.values():
             asset.assign_prices(joined_prices[asset.ticker])
-        self.cashasset.assign_prices(joined_prices[self.cashasset.ticker])
+        if self.cashasset.ticker:
+            self.cashasset.assign_prices(joined_prices[self.cashasset.ticker])
+        else:
+            ones = joined_prices[self.borrowrate.ticker]*0 + 1.0
+            ones = ones.rename(cashname)
+            self.cashasset.assign_prices(ones)
+            self.cashasset.ticker = cashname
         self.borrowrate.assign_prices(joined_prices[self.borrowrate.ticker])
         print('Done.', flush=True)
 
@@ -351,7 +360,7 @@ if __name__ == "__main__":
     a = AssetUniverse(start, end, symbols)
     a.plotprices()"""
 
-    days = 2*365
+    days = 365
     end = datetime.date.today()
     start = end - datetime.timedelta(days=days)
     assets = [
@@ -361,15 +370,18 @@ if __name__ == "__main__":
     ]
 
     AU = AssetUniverse(start, end, assets)
-    AU.plot_prices()
+    AU.download()
+    # AU.plot_prices()
 
-    print(AU.correlation_matrix())
-    print(AU.correlation_matrix(
-        ['AAPL', 'CL=F'], 
-        start=end - datetime.timedelta(days=30)
-        ))
-    print(AU.correlation_matrix(
-        ['AAPL', 'CL=F']
-        ))
-    print(AU.correlation_matrix(['EURUSD=X', 'AAPL']))
-    print(AU.covariance_matrix(['EURUSD=X', 'AAPL']))
+    print(AU.returns())
+
+    # print(AU.correlation_matrix())
+    # print(AU.correlation_matrix(
+    #     ['AAPL', 'CL=F'], 
+    #     start=end - datetime.timedelta(days=30)
+    #     ))
+    # print(AU.correlation_matrix(
+    #     ['AAPL', 'CL=F']
+    #     ))
+    # print(AU.correlation_matrix(['EURUSD=X', 'AAPL']))
+    # print(AU.covariance_matrix(['EURUSD=X', 'AAPL']))
