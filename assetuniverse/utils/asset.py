@@ -48,3 +48,6 @@ class Asset:
             result = result + f'\t\talternate names: {alternate_names},\t'
         result = result + f'\t\tdisplays as {self.display_name} - {self.data_source}'
         return result
+    
+    def __repr__(self):
+        return f'Asset({self.start}, {self.end}, \'{self.ticker}\')'
