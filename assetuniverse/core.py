@@ -364,9 +364,28 @@ if __name__ == "__main__":
     end = datetime.date.today()
     start = end - datetime.timedelta(days=days)
     assets = [
-        Asset(start, end, 'AAPL'),
-        Asset(start, end, 'CL=F', display_name='Oil'),
-        Asset(start, end, 'EURUSD=X'),
+        Asset(start, end, 'PHYS'),
+        Asset(start, end, 'SLV'),
+        Asset(start, end, 'USO'),
+        Asset(start, end, 'BAL'),
+        Asset(start, end, 'DIA'),
+        Asset(start, end, 'QQQ'),
+        Asset(start, end, 'EEMA'),
+        Asset(start, end, 'VNM'),
+        Asset(start, end, 'EIDO'),
+        Asset(start, end, 'INDA'),
+        Asset(start, end, 'EWT'),
+        Asset(start, end, 'EWG'),
+        Asset(start, end, 'VHT'),
+        Asset(start, end, 'VNQ'),
+        Asset(start, end, 'CBON'),
+        Asset(start, end, 'TLT'),
+        Asset(start, end, 'LTPZ'),
+        Asset(start, end, 'INFL'),
+        Asset(start, end, 'KALL'),
+        Asset(start, end, 'XLE'),
+        # Asset(start, end, 'CL=F', display_name='Oil'),
+        # Asset(start, end, 'EURUSD=X'),
     ]
 
     AU = AssetUniverse(start, end, assets)

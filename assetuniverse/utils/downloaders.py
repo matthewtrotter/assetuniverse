@@ -19,8 +19,12 @@ class YahooFinanceDownloader(Downloader):
         closes = DataFrame()
         if len(self.tickers) == 0:
             raise ValueError('There are no tickers to download.')
-        data = yf.download(self.tickers, interval="1d", auto_adjust=True, prepost=False, threads=True,
-                            start=self.start, end=self.end)
+        if self.end == datetime.date.today():
+            data = yf.download(self.tickers, interval="1d", auto_adjust=True, prepost=False, threads=True,
+                                start=self.start)
+        else:
+            data = yf.download(self.tickers, interval="1d", auto_adjust=True, prepost=False, threads=True,
+                                start=self.start, end=self.end)
         if len(self.tickers) > 1:
             closes = DataFrame(data["Close"][self.tickers])
         else:

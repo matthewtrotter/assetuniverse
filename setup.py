@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="assetuniverse",
-    version="3.1.0",
+    version="3.1.1",
     description="Historical asset return downloader for multiple assets (an asset universe).",
     python_requires=">=3.6",
     install_requires=["yfinance", "pandas", "pandas_datareader", "numpy", "plotly"],
