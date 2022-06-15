@@ -10,6 +10,8 @@ class Asset:
         end: datetime.date = datetime.date.today()-datetime.timedelta(days=180),
         ticker: str = 'AAPL',
         alternate_tickers: List[str] = [],
+        exchange: str = 'SMART',
+        currency: str = 'USD',
         display_name: str = None,
         downloader_definition: Dict = {},
         data_source: str = 'Yahoo Finance'
@@ -18,6 +20,8 @@ class Asset:
         self.end = end
         self.ticker = ticker
         self.alternate_tickers = alternate_tickers
+        self.exchange = exchange
+        self.currency = currency
         self.display_name = display_name or ticker
         self.downloader_definition = downloader_definition
         if data_source not in VALID_DATA_SOURCES:
@@ -29,7 +33,7 @@ class Asset:
 
     def assign_prices(self, prices: pd.Series) -> None:
         """Assign the unnormalized daily closing prices. This function will automatically
-        calculate the returns and normalized prices.
+        cal`cu`late the returns and normalized prices.
 
         Parameters
         ----------

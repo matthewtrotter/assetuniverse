@@ -1,3 +1,4 @@
+from typing import List, Dict
 import yfinance as yf
 import pandas_datareader.data as web
 
@@ -11,6 +12,22 @@ class Downloader:
         self.end = end
         self.tickers = tickers
 
+
+class InteractiveBrokersDownloader(Downloader):
+    def __init__(self, start, end, tickers, currencies, exchanges) -> None:
+        super().__init__(start, end, tickers)
+        self.currencies = currencies
+        self.exchanges = exchanges
+    
+    def download(self):
+        closes = DataFrame()
+        for symbol, currency, exchange in zip(self.tickers, self.currencies, self.exchanges):
+            # Download from trader workstation
+            data = self._download_future(symbol, currency, exchange)
+
+            # Join with other closes
+            pass
+        return closes
 
 class YahooFinanceDownloader(Downloader):
     """Download from Yahoo Finance

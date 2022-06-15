@@ -22,7 +22,7 @@ from typing import List, Optional
 
 # Use these when importing assetuniverse as a library
 from .utils.asset import Asset
-from .utils.downloaders import YahooFinanceDownloader, FredDownloader, OfflineDownloader
+from .utils.downloaders import InteractiveBrokersDownloader, YahooFinanceDownloader, FredDownloader, OfflineDownloader
 
 # Use these when running core.py as main
 # from utils.asset import Asset
@@ -47,6 +47,9 @@ class AssetUniverse:
         print('Downloading asset universe data... ', flush=True)
         
         # Separate tickers into separate downloader lists
+        InteractiveBrokersTickers = [a.ticker for a in self.assets.values() if a.data_source == 'Interactive Brokers']
+        InteractiveBrokersCurrencies = [a.currency for a in self.assets.values() if a.data_source == 'Interactive Brokers']
+        InteractiveBrokersExchanges = [a.exchange for a in self.assets.values() if a.data_source == 'Interactive Brokers']
         YahooFinanceTickers = [a.ticker for a in self.assets.values() if a.data_source == 'Yahoo Finance']
         if self.cashasset.ticker:
             YahooFinanceTickers = YahooFinanceTickers + [self.cashasset.ticker]
@@ -55,6 +58,7 @@ class AssetUniverse:
         OfflineTickers = [a.ticker for a in self.assets.values() if a.data_source == 'Offline']
 
         # Download
+        ibd = InteractiveBrokersDownloader(self.start, self.end, InteractiveBrokersTickers, InteractiveBrokersCurrencies, InteractiveBrokersExchanges)
         yfd = YahooFinanceDownloader(self.start, self.end, YahooFinanceTickers)
         fd = FredDownloader(self.start, self.end, FredTickers)
         od = OfflineDownloader(self.start, self.end, OfflineTickers)
