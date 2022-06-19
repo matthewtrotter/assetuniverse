@@ -38,7 +38,7 @@ class AssetUniverse:
         self.assets = {asset.ticker: asset for asset in assets}
         self.offline = offline
         self.cashasset = cashasset#Asset(start=start, end=end, ticker='VFISX', display_name='Cash')
-        self.borrowrate = Asset(start=start, end=end, ticker='Fed Funds Rate', display_name='Borrow Rate', data_source='FRED')
+        self.borrowrate = Asset(start=start, end=end, ticker='Fed Funds Rate', readable_name='Borrow Rate', data_source='FRED')
         self.borrow_spread = borrow_spread      # Percentage points above Fed Funds Rate
 
     def download(self) -> None:
@@ -63,6 +63,7 @@ class AssetUniverse:
         fd = FredDownloader(self.start, self.end, FredTickers)
         od = OfflineDownloader(self.start, self.end, OfflineTickers)
         prices_list = [
+            ibd.download(),
             yfd.download(),
             fd.download(),
             od.download()
@@ -367,34 +368,23 @@ if __name__ == "__main__":
     days = 365
     end = datetime.date.today()
     start = end - datetime.timedelta(days=days)
+    cashasset = Asset(start, end, 'VFISX')
     assets = [
-        Asset(start, end, 'PHYS'),
+        Asset(start, end, 'YI', exchange='NYSELIFFE', sectype='Future', readable_name='Silver', alternate_tickers=['SLV',], data_source='Interactive Brokers'),
+        Asset(start, end, 'MGC', exchange='NYMEX', sectype='Future', readable_name='Gold', alternate_tickers=['PHYS',], data_source='Interactive Brokers'),
+        Asset(start, end, 'YC', exchange='ECBOT', sectype='Future', readable_name='Corn', alternate_tickers=['CORN',], data_source='Interactive Brokers'),
+        Asset(start, end, 'ILS', exchange='GLOBEX', sectype='Future', readable_name='Israeli Shekel', data_source='Interactive Brokers'),
+        Asset(start, end, 'STXSME', exchange='SMFE', sectype='Future', readable_name='US Tech Stocks', data_source='Interactive Brokers'),
+        Asset(start, end, 'SPY'),
+        Asset(start, end, 'GLD'),
         Asset(start, end, 'SLV'),
-        Asset(start, end, 'USO'),
-        Asset(start, end, 'BAL'),
-        Asset(start, end, 'DIA'),
-        Asset(start, end, 'QQQ'),
-        Asset(start, end, 'EEMA'),
-        Asset(start, end, 'VNM'),
-        Asset(start, end, 'EIDO'),
-        Asset(start, end, 'INDA'),
-        Asset(start, end, 'EWT'),
-        Asset(start, end, 'EWG'),
-        Asset(start, end, 'VHT'),
-        Asset(start, end, 'VNQ'),
-        Asset(start, end, 'CBON'),
-        Asset(start, end, 'TLT'),
-        Asset(start, end, 'LTPZ'),
-        Asset(start, end, 'INFL'),
-        Asset(start, end, 'KALL'),
-        Asset(start, end, 'XLE'),
-        # Asset(start, end, 'CL=F', display_name='Oil'),
-        # Asset(start, end, 'EURUSD=X'),
+        Asset(start, end, 'CORN'),
+        Asset(start, end, 'TLT')
     ]
 
-    AU = AssetUniverse(start, end, assets)
+    AU = AssetUniverse(start, end, assets, cashasset=cashasset)
     AU.download()
-    # AU.plot_prices()
+    AU.plot_prices()
 
     print(AU.returns())
 

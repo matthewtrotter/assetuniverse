@@ -2,7 +2,8 @@ import datetime
 from typing import Dict, List
 import pandas as pd
 
-VALID_DATA_SOURCES = ['Yahoo Finance', 'FRED', 'Offline']
+VALID_DATA_SOURCES = ['Yahoo Finance', 'FRED', 'Offline', 'Interactive Brokers']
+VALID_SEC_TYPES = ['Stock', 'Future']
 
 class Asset:
     def __init__(self, 
@@ -12,17 +13,25 @@ class Asset:
         alternate_tickers: List[str] = [],
         exchange: str = 'SMART',
         currency: str = 'USD',
-        display_name: str = None,
+        sectype: str = None,
+        readable_name: str = None,
         downloader_definition: Dict = {},
         data_source: str = 'Yahoo Finance'
         ) -> None:
+
         self.start = start
         self.end = end
         self.ticker = ticker
         self.alternate_tickers = alternate_tickers
         self.exchange = exchange
         self.currency = currency
-        self.display_name = display_name or ticker
+        if not sectype:
+            sectype = 'Stock'
+        if sectype not in VALID_SEC_TYPES:
+            raise ValueError(f'Secrurity type {sectype} is not valid. Must be one of: {VALID_SEC_TYPES}')
+        self.sectype = sectype
+        self.readable_name = readable_name or ticker
+        self.display_name = f'{ticker} - {self.readable_name}'
         self.downloader_definition = downloader_definition
         if data_source not in VALID_DATA_SOURCES:
             raise ValueError(f'Data source {data_source} is not valid. Must be one of: {VALID_DATA_SOURCES}')
@@ -50,7 +59,7 @@ class Asset:
         if len(self.alternate_tickers):
             alternate_names = ', '.join([t for t in self.alternate_tickers])
             result = result + f'\t\talternate names: {alternate_names},\t'
-        result = result + f'\t\tdisplays as {self.display_name} - {self.data_source}'
+        result = result + f'\t\tdisplays as {self.display_name}'
         return result
     
     def __repr__(self):

@@ -1,3 +1,5 @@
+import ib_insync
+import logging
 from typing import List, Dict
 import yfinance as yf
 import pandas_datareader.data as web
@@ -18,16 +20,72 @@ class InteractiveBrokersDownloader(Downloader):
         super().__init__(start, end, tickers)
         self.currencies = currencies
         self.exchanges = exchanges
+        self.ib = ib_insync.IB()
+        self.ib.connect('127.0.0.1', 7497, clientId=1, readonly=True)
     
     def download(self):
         closes = DataFrame()
         for symbol, currency, exchange in zip(self.tickers, self.currencies, self.exchanges):
             # Download from trader workstation
-            data = self._download_future(symbol, currency, exchange)
+            print(f'IB TWS: Downloading {symbol} in {currency} currency from {exchange} exchange...')
+            data = self._download_cont_future(symbol, currency, exchange)
 
             # Join with other closes
-            pass
+            if closes.empty:
+                closes = data
+            else:
+                closes = closes.join(data)
         return closes
+    
+    def _download_cont_future(self, symbol:str, currency:str, exchange:str) -> DataFrame:
+        """Download historical data for a continuous futures contract
+
+        Parameters
+        ----------
+        symbol : str
+            Symbol of the continuous futures contract
+        currency : str
+            Base currency of the contract
+        exchange : str
+            Exchange to target
+
+        Returns
+        -------
+        DataFrame
+            Historical closing prices. Example:
+                    date        open        high         low       close  volume  average  barCount
+            0    2019-12-27  116.210938  116.437500  115.886719  116.433594    -1.0     -1.0        -1
+            1    2019-12-30  116.074219  116.218750  116.074219  116.175781    -1.0     -1.0        -1
+            2    2019-12-31  116.179688  116.207031  116.144531  116.207031    -1.0     -1.0        -1
+            3    2020-01-02  116.378906  116.531250  116.378906  116.421875    -1.0     -1.0        -1
+        
+        Raises
+        ------
+        ValueError
+            _description_
+        """
+        contract = ib_insync.ContFuture(
+            symbol=symbol,
+            exchange=exchange,
+            currency=currency
+            )
+        days = (self.end - self.start).days + 1
+        duration = f'{days} D'
+        if days > 365:
+            duration = f'{int(np.ceil(days/365))} Y'
+        bars = self.ib.reqHistoricalData(
+            contract, 
+            endDateTime=None, 
+            durationStr=duration,
+            barSizeSetting='1 day', 
+            whatToShow='ADJUSTED_LAST', 
+            useRTH=True
+            )
+        bars = ib_insync.util.df(bars)
+        bars = DataFrame(data=bars['close'].values, index=bars['date'], columns=[symbol,])
+        return bars
+        
+
 
 class YahooFinanceDownloader(Downloader):
     """Download from Yahoo Finance
