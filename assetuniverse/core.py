@@ -68,6 +68,7 @@ class AssetUniverse:
             fd.download(),
             od.download()
         ]
+        ibd.shutdown()
 
         # Join all closes together on same date axis
         joined_prices = self._join_prices(prices_list)

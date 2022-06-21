@@ -23,6 +23,11 @@ class InteractiveBrokersDownloader(Downloader):
         self.ib = ib_insync.IB()
         self.ib.connect('127.0.0.1', 7497, clientId=1, readonly=True)
     
+    def shutdown(self) -> None:
+        """Close connections
+        """
+        self.ib.disconnect()
+    
     def download(self):
         closes = DataFrame()
         for symbol, currency, exchange in zip(self.tickers, self.currencies, self.exchanges):
@@ -73,14 +78,19 @@ class InteractiveBrokersDownloader(Downloader):
         duration = f'{days} D'
         if days > 365:
             duration = f'{int(np.ceil(days/365))} Y'
-        bars = self.ib.reqHistoricalData(
-            contract, 
-            endDateTime=None, 
-            durationStr=duration,
-            barSizeSetting='1 day', 
-            whatToShow='ADJUSTED_LAST', 
-            useRTH=True
-            )
+        for i in range(5):
+            bars = self.ib.reqHistoricalData(
+                contract, 
+                endDateTime=None, 
+                durationStr=duration,
+                barSizeSetting='1 day', 
+                whatToShow='ADJUSTED_LAST', 
+                useRTH=True
+                )
+            if bars:
+                break
+            if i < 4:
+                print(f'IB TWS: Downloading {symbol} in {currency} currency from {exchange} exchange... try #{i+2}')
         bars = ib_insync.util.df(bars)
         bars = DataFrame(data=bars['close'].values, index=bars['date'], columns=[symbol,])
         return bars
