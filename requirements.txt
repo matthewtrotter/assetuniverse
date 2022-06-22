@@ -1,8 +1,10 @@
-wheel
+appdirs
+diskcache
+ib_insync
 numpy
 pandas
 pandas-datareader
 plotly
-yfinance
 pytest
-ib_insync
+yfinance
+wheel

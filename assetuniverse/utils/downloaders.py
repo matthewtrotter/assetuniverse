@@ -1,3 +1,7 @@
+import appdirs
+import arrow
+import diskcache
+from time import sleep, time
 import ib_insync
 import logging
 from typing import List, Dict
@@ -22,7 +26,10 @@ class InteractiveBrokersDownloader(Downloader):
         self.exchanges = exchanges
         self.ib = ib_insync.IB()
         self.ib.connect('127.0.0.1', 7497, clientId=1, readonly=True)
-    
+        user_data = appdirs.user_cache_dir('assetuniverse', 'interactivebrokersdownloader')
+        self.cache = diskcache.Cache(user_data)
+        self.cache_validity_seconds = 15*60
+
     def shutdown(self) -> None:
         """Close connections
         """
@@ -31,9 +38,27 @@ class InteractiveBrokersDownloader(Downloader):
     def download(self):
         closes = DataFrame()
         for symbol, currency, exchange in zip(self.tickers, self.currencies, self.exchanges):
-            # Download from trader workstation
-            print(f'IB TWS: Downloading {symbol} in {currency} currency from {exchange} exchange...')
-            data = self._download_cont_future(symbol, currency, exchange)
+            # Load from cache if already exists
+            key = f'{symbol}{currency}{exchange}'
+            cached = self.cache.get(key, None)
+            download = True
+            data = None
+            if cached:
+                last_downloaded = cached.get('last_downloaded', 0)
+                if last_downloaded > time() - self.cache_validity_seconds:
+                    delay = time() - last_downloaded
+                    print(f'IB TWS: Loaded {symbol} data from cache.\tWas last downloaded {round(delay/60, 1)} minutes ago...')
+                    data = cached['data']
+                    download = False
+            
+            # Download if cache did not have recent data
+            if download:
+                print(f'IB TWS: Downloading {symbol} in {currency} currency from {exchange} exchange...')
+                data = self._download_cont_future(symbol, currency, exchange)
+                self.cache[key] = {
+                    'data': data,
+                    'last_downloaded': time()
+                }
 
             # Join with other closes
             if closes.empty:
@@ -91,6 +116,7 @@ class InteractiveBrokersDownloader(Downloader):
                 break
             if i < 4:
                 print(f'IB TWS: Downloading {symbol} in {currency} currency from {exchange} exchange... try #{i+2}')
+                sleep(1)
         bars = ib_insync.util.df(bars)
         bars = DataFrame(data=bars['close'].values, index=bars['date'], columns=[symbol,])
         return bars

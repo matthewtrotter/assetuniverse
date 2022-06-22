@@ -5,7 +5,7 @@ setup(
     version="4.0.2",
     description="Historical asset return downloader for multiple assets (an asset universe).",
     python_requires=">=3.6",
-    install_requires=["yfinance", "pandas", "pandas_datareader", "numpy", "plotly", "pytest", "ib_insync"],
+    install_requires=["yfinance", "pandas", "pandas_datareader", "numpy", "plotly", "pytest", "ib_insync", "appdirs", "diskcache"],
     packages=find_packages(exclude=['tests*']),
     zip_safe=False,
 )
