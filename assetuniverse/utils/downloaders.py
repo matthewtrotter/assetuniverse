@@ -115,8 +115,8 @@ class InteractiveBrokersDownloader(Downloader):
             if bars:
                 break
             if i < 4:
+                sleep(2)
                 print(f'IB TWS: Downloading {symbol} in {currency} currency from {exchange} exchange... try #{i+2}')
-                sleep(1)
         bars = ib_insync.util.df(bars)
         bars = DataFrame(data=bars['close'].values, index=bars['date'], columns=[symbol,])
         return bars
