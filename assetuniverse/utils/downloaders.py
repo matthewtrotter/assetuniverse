@@ -28,7 +28,7 @@ class InteractiveBrokersDownloader(Downloader):
         self.ib.connect('127.0.0.1', 7497, clientId=1, readonly=True)
         user_data = appdirs.user_cache_dir('assetuniverse', 'interactivebrokersdownloader')
         self.cache = diskcache.Cache(user_data)
-        self.cache_validity_seconds = 15*60
+        self.cache_validity_seconds = 20*60
 
     def shutdown(self) -> None:
         """Close connections
