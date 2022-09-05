@@ -46,7 +46,7 @@ jobs:
     - name: Build artifacts
       run: python -m build
     - name: Push to PyPi        
-      run: python3 -m twine upload --verbose --repository-url https://test.pypi.org/legacy/ --username $TWINE_USERNAME --password $TWINE_PASSWORD dist/*
+      run: python3 -m twine upload --verbose --repository-url $TWINE_REPOSITORY_URL --username $TWINE_USERNAME --password $TWINE_PASSWORD dist/*
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
