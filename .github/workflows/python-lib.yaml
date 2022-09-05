@@ -46,7 +46,7 @@ jobs:
     - name: Build artifacts
       run: python -m build
     - name: Push to PyPi        
-      run: python3 -m twine upload --verbose dist/*
+      run: python3 -m twine upload --verbose --password $TWINE_PASSWORD dist/*
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
