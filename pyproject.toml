@@ -33,6 +33,7 @@ version = {attr = "assetuniverse.VERSION"}
 [tool.semantic_release]
 branch = "main"
 build_command = false
+commit_version_number = true
 hvcs = "github"
 upload_to_repository = false
 upload_to_release = false
