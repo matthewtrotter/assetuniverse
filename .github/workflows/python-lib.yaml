@@ -41,13 +41,13 @@ jobs:
         git config --global user.email actions@github.com
         git config --global user.name github-actions
         semantic-release publish
-        sleep 5
-        git pull
-        cat assetuniverse/__init__.py
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Build artifacts
       run: |
+        sleep 2
+        git pull
+        cat assetuniverse/__init__.py
         python -m build
         echo $PYPI_TOKEN
       env:
