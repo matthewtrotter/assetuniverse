@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.10.0 (2022-09-05)
+### Feature
+* Revert ([`eab6551`](https://github.com/matthewtrotter/assetuniverse/commit/eab655187b1645970d6bc750b369e3b29f36dedf))
+
 ## v0.9.0 (2022-09-05)
 ### Feature
 * Pull ([`6f9c58c`](https://github.com/matthewtrotter/assetuniverse/commit/6f9c58c1414d01a2277b2784f94e1f52d5d5716e))
