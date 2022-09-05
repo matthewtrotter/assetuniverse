@@ -5,31 +5,32 @@ The asset universe downloads historical daily prices and returns of user-specifi
 
 - [Interactive Brokers Trader Workstation](https://www.interactivebrokers.com/en/trading/tws.php)
 - [Yahoo Finance](https://finance.yahoo.com/)
-- [Federal Reserve Economic Database](https://fred.stlouisfed.org/series/GOLDAMGBD228NLBM)
-## Installation
-
-Install Asset Universe using `pip`:
-
-```bash
-git clone URL
-cd assetuniverse
-python3 -m pip install .
-```
+- [Federal Reserve Economic Database](https://fred.stlouisfed.org)
 
 ## Using
 ```python
+import datetime
+from assetuniverse import Asset, AssetUniverse
+
+# Set start date, end date, and assets to download
 days = 2*365    # 2 years
 end = datetime.date.today()
 start = end - datetime.timedelta(days=days)
 assets = [
     Asset(start, end, 'AAPL'),
-    Asset(start, end, 'CL=F', display_name='Oil'),
+    Asset(start, end, 'CL=F', readable_name='Oil'),
     Asset(start, end, 'EURUSD=X'),
 ]
 
+# Download the daily returns of the assets
 AU = AssetUniverse(start, end, assets)
+AU.download()
+
+# Plot price history in a webpage.
+# Prices are normalized to start at $1
 AU.plot_prices()
 
+# Print covariance and correlation matrices
 print(AU.correlation_matrix())  # correlation matrix over entire history
 print(AU.correlation_matrix(
     ['AAPL', 'CL=F'],   # only of these two assets
@@ -41,4 +42,4 @@ print(AU.covariance_matrix(
 ```
 
 ## Testing
-In the project root directory, run `python3 -m pytest tests`
+In the project root directory, run `pytest test.py`

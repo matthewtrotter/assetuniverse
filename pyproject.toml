@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "assetuniverse"
+description = "A downloader of historical daily returns for multiple investable assets."
+readme = "README.md"
+license = { file="COPYING" }
+requires-python = ">=3.6"
+keywords = ["historical returns", "returns", "daily returns", "stocks", "futures", "commodities", "interactive brokers", "yahoo finance", "fred"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
+]
+dependencies = [
+    "appdirs",
+    "arrow",
+    "diskcache",
+    "ib_insync",
+    "numpy",
+    "pandas",
+    "pandas-datareader",
+    "plotly",
+    "pytest",
+    "yfinance",
+]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "assetuniverse.VERSION"}
