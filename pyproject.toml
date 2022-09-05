@@ -32,12 +32,9 @@ version = {attr = "assetuniverse.VERSION"}
 
 [tool.semantic_release]
 branch = "main"
-build_command = "python -m pip install build; python -m build"
-dist_path = "dist"
-remove_dist = true
+build_command = false
 hvcs = "github"
 upload_to_repository = false
 upload_to_release = false
-repository = "testpypi"
 version_source = "tag"
 version_variable = "assetuniverse/__init__.py:VERSION"
