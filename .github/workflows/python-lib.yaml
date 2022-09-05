@@ -37,7 +37,10 @@ jobs:
       run: |
         pytest test.py
     - name: Tag release
-      run: semantic-release version
+      run: |
+        git config --global user.email actions@github.com
+        git config --global user.name github-actions
+        semantic-release version
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Build artifacts
