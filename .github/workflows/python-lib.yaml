@@ -44,7 +44,11 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Build artifacts
-      run: python -m build
+      run: |
+        python -m build
+        echo $PYPI_TOKEN
+      env:
+        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
     - name: Publish package to TestPyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
