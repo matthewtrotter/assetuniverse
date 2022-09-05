@@ -29,3 +29,11 @@ dynamic = ["version"]
 
 [tool.setuptools.dynamic]
 version = {attr = "assetuniverse.VERSION"}
+
+[tool.semantic_release]
+branch = "main"
+build_command = false
+hvcs = "github"
+upload_to_pypi = false
+upload_to_repository = false
+version_variable = "assetuniverse/__init__.py:VERSION"
