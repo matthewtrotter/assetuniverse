@@ -45,9 +45,15 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Build artifacts
       run: python -m build
-    - name: Push to PyPi        
-      run: python3 -m twine upload --verbose --password $TWINE_PASSWORD dist/*
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+    - name: Publish package to TestPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
+
+    # - name: Push to PyPi        
+    #   run: python3 -m twine upload --verbose --password $TWINE_PASSWORD dist/*
+    #   env:
+    #     TWINE_USERNAME: __token__
+    #     TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+    #     TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
