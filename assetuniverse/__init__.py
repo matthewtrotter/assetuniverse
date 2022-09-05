@@ -1,4 +1,4 @@
 from .utils.asset import Asset
 from .core import AssetUniverse
 
-VERSION = "0.8.1"
+VERSION = "0.8.2"
