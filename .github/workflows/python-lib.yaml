@@ -9,7 +9,10 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
+  deployments: write
+  packages: write
+  statuses: write
 
 jobs:
   build:
