@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.9.0 (2022-09-05)
+### Feature
+* Pull ([`6f9c58c`](https://github.com/matthewtrotter/assetuniverse/commit/6f9c58c1414d01a2277b2784f94e1f52d5d5716e))
+
 ## v0.8.2 (2022-09-05)
 ### Fix
 * Version ([`38a1e36`](https://github.com/matthewtrotter/assetuniverse/commit/38a1e369a9d7969d3120c8a340230b7aeec3edb4))
