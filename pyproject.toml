@@ -40,4 +40,5 @@ upload_to_pypi = true
 upload_to_repository = false
 repository = "testpypi"
 # repository_url = "https://github.com/matthewtrotter/assetuniverse"
+version_source = "tag"
 version_variable = "assetuniverse/__init__.py:VERSION"
