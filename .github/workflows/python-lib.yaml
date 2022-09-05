@@ -38,6 +38,8 @@ jobs:
         pytest test.py
     - name: Tag release
       run: semantic-release version
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Build artifacts
       run: python -m build
     - name: Push to PyPi        
