@@ -52,15 +52,14 @@ jobs:
         echo $PYPI_TOKEN
       env:
         PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-    - name: Publish package to TestPyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        repository_url: https://test.pypi.org/legacy/
-
-    # - name: Push to PyPi        
-    #   run: python3 -m twine upload --verbose --password $TWINE_PASSWORD dist/*
-    #   env:
-    #     TWINE_USERNAME: __token__
-    #     TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-    #     TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+    - name: Publish package to TestPyPI        
+      run: python3 -m twine upload --verbose --password $TWINE_PASSWORD dist/*
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+    # - name: Publish package to TestPyPI
+    #   uses: pypa/gh-action-pypi-publish@release/v1
+    #   with:
+    #     password: ${{ secrets.PYPI_API_TOKEN }}
+    #     repository_url: https://test.pypi.org/legacy/
