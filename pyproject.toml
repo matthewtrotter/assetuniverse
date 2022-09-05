@@ -32,7 +32,7 @@ version = {attr = "assetuniverse.VERSION"}
 
 [tool.semantic_release]
 branch = "main"
-build_command = "python -m install build; python -m build"
+build_command = "python -m pip install build; python -m build"
 dist_path = "dist"
 remove_dist = true
 hvcs = "github"
