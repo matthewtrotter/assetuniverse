@@ -27,7 +27,7 @@ AU = AssetUniverse(start, end, assets)
 AU.download()
 
 # Plot price history in a webpage.
-# Prices are normalized to start at $1
+# Prices are normalized to start at $1.
 AU.plot_prices()
 
 # Print covariance and correlation matrices
