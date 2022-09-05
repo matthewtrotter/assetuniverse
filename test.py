@@ -2,18 +2,19 @@ import datetime
 
 import pytest
 
-import assetuniverse.assetuniverse
-# from assetuniverse import AssetUniverse
-# from assetuniverse import Asset
+from assetuniverse import Asset, AssetUniverse
+
 
 def test_basic():
     days = 365
     end = datetime.date.today()
     start = end - datetime.timedelta(days=days)
     tickers = ['AAPL', 'CL=F', 'EURUSD=X']
-    assets = [assetuniverse.assetuniverse.Asset(start, end, ticker) for ticker in tickers]
+    assets = [Asset(start, end, ticker) for ticker in tickers]
+    cashasset = Asset(start, end, 'VFISX')
 
-    AU = assetuniverse.assetuniverse.AssetUniverse(start, end, assets)
+    AU = AssetUniverse(start, end, assets, cashasset)
+    AU.download()
 
     for au_ticker, ticker in zip(AU.assets.keys(), tickers):
         assert au_ticker == ticker, f'Asset {au_ticker} did not have correct ticker {ticker}'

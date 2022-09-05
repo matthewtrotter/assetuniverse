@@ -1,4 +1,5 @@
 appdirs
+arrow
 diskcache
 ib_insync
 numpy
@@ -7,4 +8,3 @@ pandas-datareader
 plotly
 pytest
 yfinance
-wheel

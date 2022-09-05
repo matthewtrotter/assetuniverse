@@ -24,6 +24,11 @@ class InteractiveBrokersDownloader(Downloader):
         super().__init__(start, end, tickers)
         self.currencies = currencies
         self.exchanges = exchanges
+        self.ib = None
+    
+    def connect(self) -> None:
+        """Instantiate connection Trader Workstation
+        """
         self.ib = ib_insync.IB()
         self.ib.connect('127.0.0.1', 7497, clientId=1, readonly=True)
         user_data = appdirs.user_cache_dir('assetuniverse', 'interactivebrokersdownloader')
@@ -33,38 +38,41 @@ class InteractiveBrokersDownloader(Downloader):
     def shutdown(self) -> None:
         """Close connections
         """
-        self.ib.disconnect()
+        if self.ib:
+            self.ib.disconnect()
     
     def download(self):
         closes = DataFrame()
-        for symbol, currency, exchange in zip(self.tickers, self.currencies, self.exchanges):
-            # Load from cache if already exists
-            key = f'{symbol}{currency}{exchange}'
-            cached = self.cache.get(key, None)
-            download = True
-            data = None
-            if cached:
-                last_downloaded = cached.get('last_downloaded', 0)
-                if last_downloaded > time() - self.cache_validity_seconds:
-                    delay = time() - last_downloaded
-                    print(f'IB TWS: Loaded {symbol} data from cache.\tWas last downloaded {round(delay/60, 1)} minutes ago...')
-                    data = cached['data']
-                    download = False
-            
-            # Download if cache did not have recent data
-            if download:
-                print(f'IB TWS: Downloading {symbol} in {currency} currency from {exchange} exchange...')
-                data = self._download_cont_future(symbol, currency, exchange)
-                self.cache[key] = {
-                    'data': data,
-                    'last_downloaded': time()
-                }
+        if self.tickers:
+            self.connect()
+            for symbol, currency, exchange in zip(self.tickers, self.currencies, self.exchanges):
+                # Load from cache if already exists
+                key = f'{symbol}{currency}{exchange}'
+                cached = self.cache.get(key, None)
+                download = True
+                data = None
+                if cached:
+                    last_downloaded = cached.get('last_downloaded', 0)
+                    if last_downloaded > time() - self.cache_validity_seconds:
+                        delay = time() - last_downloaded
+                        print(f'IB TWS: Loaded {symbol} data from cache.\tWas last downloaded {round(delay/60, 1)} minutes ago...')
+                        data = cached['data']
+                        download = False
+                
+                # Download if cache did not have recent data
+                if download:
+                    print(f'IB TWS: Downloading {symbol} in {currency} currency from {exchange} exchange...')
+                    data = self._download_cont_future(symbol, currency, exchange)
+                    self.cache[key] = {
+                        'data': data,
+                        'last_downloaded': time()
+                    }
 
-            # Join with other closes
-            if closes.empty:
-                closes = data
-            else:
-                closes = closes.join(data)
+                # Join with other closes
+                if closes.empty:
+                    closes = data
+                else:
+                    closes = closes.join(data)
         return closes
     
     def _download_cont_future(self, symbol:str, currency:str, exchange:str) -> DataFrame:

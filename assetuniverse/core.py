@@ -115,9 +115,13 @@ class AssetUniverse:
         """
         # Join all closes together
         joined_prices = pd.DataFrame()
-        joined_prices = prices_list[0]
-        for prices in prices_list[1:]:
-            if not prices.empty:
+        for i, prices in enumerate(prices_list):
+            if not prices.empty and joined_prices.empty:
+                # Find first non empty prices
+                joined_prices = prices
+                continue
+            if not joined_prices.empty:
+                # Join prices with previous prices
                 joined_prices = joined_prices.join(prices, how='inner')
         # closes = closes.join(annualBorrowRate, how='left')    # Do I need this for the borrow rate? Different than how='inner'
 
@@ -357,45 +361,3 @@ class AssetUniverse:
             tickers = self.tickers(include_cash=False, include_borrow_rate=False)
         returns = self.returns(tickers, start, end)
         return returns.cov()
-
-
-if __name__ == "__main__":
-    """end = datetime.datetime.today()
-    start = end - datetime.timedelta(days=60)
-    symbols = ['RDS-B', 'BRK-B', 'Palladium', 'AAPL', 'GOOG', 'Gold']
-    a = AssetUniverse(start, end, symbols)
-    a.plotprices()"""
-
-    days = 365
-    end = datetime.date.today()
-    start = end - datetime.timedelta(days=days)
-    cashasset = Asset(start, end, 'VFISX')
-    assets = [
-        Asset(start, end, 'YI', exchange='NYSELIFFE', sectype='Future', readable_name='Silver', alternate_tickers=['SLV',], data_source='Interactive Brokers'),
-        Asset(start, end, 'MGC', exchange='NYMEX', sectype='Future', readable_name='Gold', alternate_tickers=['PHYS',], data_source='Interactive Brokers'),
-        Asset(start, end, 'YC', exchange='ECBOT', sectype='Future', readable_name='Corn', alternate_tickers=['CORN',], data_source='Interactive Brokers'),
-        Asset(start, end, 'ILS', exchange='GLOBEX', sectype='Future', readable_name='Israeli Shekel', data_source='Interactive Brokers'),
-        Asset(start, end, 'STXSME', exchange='SMFE', sectype='Future', readable_name='US Tech Stocks', data_source='Interactive Brokers'),
-        Asset(start, end, 'SPY'),
-        Asset(start, end, 'GLD'),
-        Asset(start, end, 'SLV'),
-        Asset(start, end, 'CORN'),
-        Asset(start, end, 'TLT')
-    ]
-
-    AU = AssetUniverse(start, end, assets, cashasset=cashasset)
-    AU.download()
-    AU.plot_prices()
-
-    print(AU.returns())
-
-    # print(AU.correlation_matrix())
-    # print(AU.correlation_matrix(
-    #     ['AAPL', 'CL=F'], 
-    #     start=end - datetime.timedelta(days=30)
-    #     ))
-    # print(AU.correlation_matrix(
-    #     ['AAPL', 'CL=F']
-    #     ))
-    # print(AU.correlation_matrix(['EURUSD=X', 'AAPL']))
-    # print(AU.covariance_matrix(['EURUSD=X', 'AAPL']))
