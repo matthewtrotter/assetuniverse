@@ -37,5 +37,5 @@ commit_version_number = true
 hvcs = "github"
 upload_to_repository = false
 upload_to_release = false
-version_source = "commit"
+version_source = "tag"
 version_variable = "assetuniverse/__init__.py:VERSION"
