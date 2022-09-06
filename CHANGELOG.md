@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.10.3 (2022-09-06)
+### Fix
+* Needs ([`e185f28`](https://github.com/matthewtrotter/assetuniverse/commit/e185f2890b2d240bdc6e834a29eedcba73a5cacd))
+
 ## v0.10.2 (2022-09-06)
 ### Fix
 * Conditions ([`baff321`](https://github.com/matthewtrotter/assetuniverse/commit/baff3215527490bb8ec44adbe6a5248b3f36565b))
