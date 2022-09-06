@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.10.5 (2022-09-06)
+### Fix
+* Remove if ([`a9f6af3`](https://github.com/matthewtrotter/assetuniverse/commit/a9f6af3e5ea007731ff2d0aef0d290a74c6ea0ff))
+
 ## v0.10.4 (2022-09-06)
 ### Fix
 * Comment test ([`34af87c`](https://github.com/matthewtrotter/assetuniverse/commit/34af87c9595108eaba6ea6760e32325507f8293c))
