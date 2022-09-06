@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.11.0 (2022-09-06)
+### Feature
+* Readme ([`e62a4df`](https://github.com/matthewtrotter/assetuniverse/commit/e62a4df425b8898bf3ca140bbf24eb239aaceefb))
+
 ## v0.10.5 (2022-09-06)
 ### Fix
 * Remove if ([`a9f6af3`](https://github.com/matthewtrotter/assetuniverse/commit/a9f6af3e5ea007731ff2d0aef0d290a74c6ea0ff))
