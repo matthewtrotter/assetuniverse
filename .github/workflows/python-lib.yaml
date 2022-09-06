@@ -15,9 +15,8 @@ permissions:
   statuses: write
 
 jobs:
-  build:
+  test_and_tag:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -43,13 +42,24 @@ jobs:
         semantic-release publish
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build artifacts
+
+  publish:
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.ref, 'refs/tags/v')
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
       run: |
-        sleep 2
-        git pull
-        cat assetuniverse/__init__.py
-        python -m build
-        echo $PYPI_TOKEN
+        python -m pip install --upgrade pip
+        pip install build pytest wheel python-semantic-release
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Build artifacts
+      run: python -m build
       env:
         PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
     - name: Publish package to TestPyPI        
@@ -58,8 +68,3 @@ jobs:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
-    # - name: Publish package to TestPyPI
-    #   uses: pypa/gh-action-pypi-publish@release/v1
-    #   with:
-    #     password: ${{ secrets.PYPI_API_TOKEN }}
-    #     repository_url: https://test.pypi.org/legacy/
