@@ -43,5 +43,5 @@ def test_basic():
         AU.delete(['does not exist'])
 
 
-def test_fail():
-    assert False, "Test Fails Here!"
+# def test_fail():
+#     assert False, "Test Fails Here!"
