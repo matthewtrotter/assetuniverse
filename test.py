@@ -41,3 +41,7 @@ def test_basic():
     assert AU.tickers() == pre_delete_tickers[2:], f'Did not delete {tickers[0]} correctly.'
     with pytest.raises(KeyError, match='Could not delete requested ticker*'):
         AU.delete(['does not exist'])
+
+
+def test_fail():
+    assert False, "Test Fails Here!"
