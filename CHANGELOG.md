@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v0.10.4 (2022-09-06)
+### Fix
+* Comment test ([`34af87c`](https://github.com/matthewtrotter/assetuniverse/commit/34af87c9595108eaba6ea6760e32325507f8293c))
+* Failing test ([`556f5c6`](https://github.com/matthewtrotter/assetuniverse/commit/556f5c6112b344aef690e2de77c741bf32cf67d8))
+
 ## v0.10.3 (2022-09-06)
 ### Fix
 * Needs ([`e185f28`](https://github.com/matthewtrotter/assetuniverse/commit/e185f2890b2d240bdc6e834a29eedcba73a5cacd))
