@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.10.1 (2022-09-06)
+### Fix
+* Split jobs ([`47af3b3`](https://github.com/matthewtrotter/assetuniverse/commit/47af3b3c0481360e9d68d640a410118de728de45))
+
 ## v0.10.0 (2022-09-05)
 ### Feature
 * Revert ([`eab6551`](https://github.com/matthewtrotter/assetuniverse/commit/eab655187b1645970d6bc750b369e3b29f36dedf))
