@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.11.1 (2022-09-06)
+### Fix
+* Scm ([`67f7190`](https://github.com/matthewtrotter/assetuniverse/commit/67f7190efbb4c41a171c23cdf68c53433a228de6))
+
 ## v0.11.0 (2022-09-06)
 ### Feature
 * Readme ([`e62a4df`](https://github.com/matthewtrotter/assetuniverse/commit/e62a4df425b8898bf3ca140bbf24eb239aaceefb))
