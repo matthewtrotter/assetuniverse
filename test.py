@@ -42,6 +42,3 @@ def test_basic():
     with pytest.raises(KeyError, match='Could not delete requested ticker*'):
         AU.delete(['does not exist'])
 
-
-# def test_fail():
-#     assert False, "Test Fails Here!"
