@@ -1,10 +1,11 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "assetuniverse"
 description = "A downloader of historical daily returns for multiple investable assets."
+readme = "README.md"
 license = {text = "GPL-3.0-or-later"}
 requires-python = ">=3.6"
 keywords = ["historical returns", "returns", "daily returns", "stocks", "futures", "commodities", "interactive brokers", "yahoo finance", "fred"]
@@ -28,7 +29,6 @@ dynamic = ["version"]
 
 [tool.setuptools.dynamic]
 version = {attr = "assetuniverse.VERSION"}
-readme = {file = "README.md"}
 
 [tool.semantic_release]
 branch = "main"
