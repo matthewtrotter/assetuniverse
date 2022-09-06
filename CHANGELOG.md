@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.10.2 (2022-09-06)
+### Fix
+* Conditions ([`baff321`](https://github.com/matthewtrotter/assetuniverse/commit/baff3215527490bb8ec44adbe6a5248b3f36565b))
+
 ## v0.10.1 (2022-09-06)
 ### Fix
 * Split jobs ([`47af3b3`](https://github.com/matthewtrotter/assetuniverse/commit/47af3b3c0481360e9d68d640a410118de728de45))
