@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.12.0 (2022-10-31)
+### Feature
+* **downloader:** ✨ print last valid download date of each individual asset ([`47f3270`](https://github.com/matthewtrotter/assetuniverse/commit/47f327030a9019475610b7b33ffc5b20dc8c0297))
+
 ## v0.11.1 (2022-09-06)
 ### Fix
 * Scm ([`67f7190`](https://github.com/matthewtrotter/assetuniverse/commit/67f7190efbb4c41a171c23cdf68c53433a228de6))
