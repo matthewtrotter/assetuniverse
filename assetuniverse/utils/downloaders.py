@@ -9,7 +9,7 @@ import yfinance as yf
 import pandas_datareader.data as web
 
 import datetime
-from pandas import DataFrame, date_range
+from pandas import DataFrame, date_range, Series
 import numpy as np
 
 class Downloader:
@@ -17,7 +17,10 @@ class Downloader:
         self.start = start
         self.end = end
         self.tickers = tickers
+        self.last_dates_downloaded = None
 
+    def _calculate_last_date_downloaded(self, closes: DataFrame) -> None:
+        self.last_dates_downloaded = closes.apply(Series.last_valid_index)
 
 class InteractiveBrokersDownloader(Downloader):
     def __init__(self, start, end, tickers, currencies, exchanges) -> None:
@@ -73,6 +76,7 @@ class InteractiveBrokersDownloader(Downloader):
                     closes = data
                 else:
                     closes = closes.join(data)
+            super()._calculate_last_date_downloaded(closes)
         return closes
     
     def _download_cont_future(self, symbol:str, currency:str, exchange:str) -> DataFrame:
@@ -149,6 +153,7 @@ class YahooFinanceDownloader(Downloader):
         else:
             closes = DataFrame(data["Close"])
             closes = closes.rename(columns={"Close": self.tickers[0]})
+        super()._calculate_last_date_downloaded(closes)
         return closes
 
 
@@ -179,6 +184,7 @@ class FredDownloader(Downloader):
                 idx = date_range(start=self.start, end=self.end, freq='D')
                 closes = closes.reindex(idx)
                 closes.fillna(method="ffill", inplace=True)
+        super()._calculate_last_date_downloaded(closes)
         return closes
 
 
@@ -192,4 +198,5 @@ class OfflineDownloader(Downloader):
         closes = DataFrame(data=np.cumprod(r, axis=0), columns=offlineSym)
         closes["Date"] = date_range(self.start, self.end, freq='D')
         closes = closes.set_index('Date')
+        super()._calculate_last_date_downloaded(closes)
         return closes

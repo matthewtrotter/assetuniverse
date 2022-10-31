@@ -72,6 +72,7 @@ class AssetUniverse:
 
         # Join all closes together on same date axis
         joined_prices = self._join_prices(prices_list)
+        self.last_dates_downloaded = pd.concat((ibd.last_dates_downloaded, yfd.last_dates_downloaded, fd.last_dates_downloaded, od.last_dates_downloaded))
 
         # Rename cash and borrow rate
         cashname = 'Cash'
