@@ -1,7 +1,7 @@
 Asset Universe
 ==============
 
-![Python 3.7](https://github.com/matthewtrotter/assetuniverse/workflows/Python%20package/badge.svg)
+![Python Package](https://github.com/matthewtrotter/assetuniverse/workflows/Python%20package/badge.svg)
 
 The asset universe downloads historical daily prices and returns of user-specified stocks, futures, and currencies. It downloads historical data from the following sources:
 
