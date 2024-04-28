@@ -21,7 +21,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build pytest wheel distutils
+        pip install build pytest wheel
+        if [ "${{ matrix.python-version }}" = "3.12" ]; then pip install distutils; fi
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test with pytest
       run: pytest test.py
