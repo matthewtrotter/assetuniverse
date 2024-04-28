@@ -1,17 +1,5 @@
 #!/usr/bin/env python
 
-"""
-Title: Asset Universe Class Definition
-Author: Matthew Trotter
-Description:
-    This asset universe class will download and parse stock and
-    financial asset data from various online sources. You can use
-    the price DataFrame or daily returns DataFrame for further
-    analysis and testing.
-
-Copyright 2019 Matthew Trotter
-"""
-
 import copy
 import datetime
 import numpy as np
@@ -279,7 +267,7 @@ class AssetUniverse:
             tickers = self.tickers(include_borrow_rate=False)
         prices = self.prices(tickers, start, end, normalize)
         renames = {}
-        for ticker, _ in prices.iteritems():
+        for ticker in prices.columns:
             asset = self.assets.get(ticker, None)
             if ticker == self.cashasset.ticker:
                 asset = self.cashasset
@@ -297,6 +285,8 @@ class AssetUniverse:
         fig.update_yaxes(
             type='log'
         )
+        # update y axis name
+        fig.update_yaxes(title_text='Price (Normalized)' if normalize else 'Price')
         fig.show()
 
 

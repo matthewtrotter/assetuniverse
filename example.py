@@ -6,18 +6,17 @@ import datetime
 days = 1*365
 end = datetime.date.today()
 start = end - datetime.timedelta(days=days)
-cashasset = Asset(start, end, 'VFISX')
+cashasset = Asset(start, end, 'VFISX', readable_name='Cash')
 # tickers = ['AAPL', 'MSFT', 'SPY', 'TLT', 'UUP', 'GLD']
 # assets = [Asset(start, end, ticker) for ticker in tickers]
 
 assets = [
     Asset(start, end, 'GLD', readable_name='Gold'),
-    Asset(start, end, 'USO', readable_name='Oil'),
+    Asset(start, end, 'CL=F', readable_name='Oil'),
+    Asset(start, end, 'ZB=F', readable_name='Treasury Bonds'),
     Asset(start, end, 'AAPL', readable_name='Apple'),
-    Asset(start, end, 'MSFT', readable_name='Microsoft'),
-    Asset(start, end, 'SPY', readable_name='S&P 500'),
-    Asset(start, end, 'TLT', readable_name='30-year Treasury Bonds'),
-    Asset(start, end, 'UUP', readable_name='US Dollar'),
+    Asset(start, end, 'BTC-USD', readable_name='Bitcoin/USD'),
+    Asset(start, end, 'EURUSD=X', readable_name='EUR/USD'),
     # Asset(start, end, 'YK', readable_name='Corn', exchange='ECBOT', data_source='Interactive Brokers'),
     # Asset(start, end, 'MCD', readable_name='CAD.USD', exchange='GLOBEX', data_source='Interactive Brokers', ),
 ]

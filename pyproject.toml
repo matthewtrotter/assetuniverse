@@ -1,17 +1,22 @@
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "assetuniverse"
-description = "A downloader of historical daily returns for multiple investable assets."
+version = "0.1.0"
+authors = [
+  {name="Matthew Trotter"},
+]
+description = "A downloader of historical daily returns for multiple investable assets with some analysis tools too."
 readme = "README.md"
 license = {text = "GPL-3.0-or-later"}
 requires-python = ">=3.6"
 keywords = ["historical returns", "returns", "daily returns", "stocks", "futures", "commodities", "interactive brokers", "yahoo finance", "fred"]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
 ]
 dependencies = [
     "appdirs",
@@ -22,20 +27,5 @@ dependencies = [
     "pandas",
     "pandas-datareader",
     "plotly",
-    "pytest",
     "yfinance",
 ]
-dynamic = ["version"]
-
-[tool.setuptools.dynamic]
-version = {attr = "assetuniverse.VERSION"}
-
-[tool.semantic_release]
-branch = "main"
-build_command = false
-commit_version_number = true
-hvcs = "github"
-upload_to_repository = false
-upload_to_release = false
-version_source = "tag"
-version_variable = "assetuniverse/__init__.py:VERSION"
