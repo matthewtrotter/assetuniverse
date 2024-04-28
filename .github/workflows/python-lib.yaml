@@ -14,58 +14,52 @@ permissions:
 jobs:
   test_and_tag:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
     steps:
     - name: Checkout
       uses: actions/checkout@v3
       with:
-        # token: ${{ secrets.GH_TOKEN }}
         fetch-depth: 0
-    - name: Set up Python 3.10
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
-        python-version: "3.10"
+        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build pytest wheel python-semantic-release
+        pip install build pytest wheel
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test with pytest
-      run: |
-        pytest test.py
-    - name: Tag release
-      run: |
-        git config --global user.email actions@github.com
-        git config --global user.name github-actions
-        semantic-release publish
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: pytest test.py
 
-  publish:
-    runs-on: ubuntu-latest
-    needs: test_and_tag
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Pull Again
-      run: | 
-        sleep 2
-        git pull
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.10"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build pytest wheel python-semantic-release
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Build artifacts
-      run: python -m build
-      env:
-        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-    - name: Publish package to TestPyPI        
-      run: python3 -m twine upload --verbose --password $TWINE_PASSWORD dist/*
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+  # publish:
+  #   runs-on: ubuntu-latest
+  #   needs: test_and_tag
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v3
+  #   - name: Pull Again
+  #     run: | 
+  #       sleep 2
+  #       git pull
+  #   - name: Set up Python 3.10
+  #     uses: actions/setup-python@v3
+  #     with:
+  #       python-version: "3.10"
+  #   - name: Install dependencies
+  #     run: |
+  #       python -m pip install --upgrade pip
+  #       pip install build pytest wheel python-semantic-release
+  #       if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+  #   - name: Build artifacts
+  #     run: python -m build
+  #     env:
+  #       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+  #   - name: Publish package to TestPyPI        
+  #     run: python3 -m twine upload --verbose --password $TWINE_PASSWORD dist/*
+  #     env:
+  #       TWINE_USERNAME: __token__
+  #       TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+  #       TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
