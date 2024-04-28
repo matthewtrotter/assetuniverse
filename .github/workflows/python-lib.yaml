@@ -1,22 +1,17 @@
-name: Python Library Test and Publish
+name: Python package
 
 on:
   push:
     branches:
       - main
 
-permissions:
-  contents: write
-  deployments: write
-  packages: write
-  statuses: write
-
 jobs:
-  test_and_tag:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.7.17', '3.8.18', '3.9.19', '3.10.14', '3.11.9', '3.12.3']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
+        # python-version: ['3.7.17', '3.8.18', '3.9.19', '3.10.14', '3.11.9', '3.12.3']
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
@@ -26,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build pytest wheel
+        pip install build pytest wheel distutils
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test with pytest
       run: pytest test.py
