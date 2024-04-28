@@ -3,7 +3,7 @@ Asset Universe
 
 ![Python Package](https://github.com/matthewtrotter/assetuniverse/workflows/Python%20package/badge.svg)
 
-The asset universe downloads historical daily prices and returns of user-specified stocks, futures, and currencies. It downloads historical data from the following sources:
+Download historical daily prices and returns of stocks, futures, cryptocurrencies, and fiat currencies. Plot historical returns and calculate correlation and covariance matrices. Asset Universe downloads historical data from the following sources:
 
 - [Interactive Brokers Trader Workstation](https://www.interactivebrokers.com/en/trading/tws.php)
 - [Yahoo Finance](https://finance.yahoo.com/)
@@ -62,6 +62,3 @@ The `AssetUniverse` class calculates a typical margin borrowing rate for each as
 # Set the borrow spread to 3.0%
 AU = AssetUniverse(start, end, assets, cashasset, borrow_spread=3.0)
 ```
-
-## Testing
-In the project root directory, run `pytest test.py`
