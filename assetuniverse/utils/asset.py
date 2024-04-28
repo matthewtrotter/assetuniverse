@@ -50,7 +50,7 @@ class Asset:
             Unnormalized daily closing prices.
         """
         self.prices = prices
-        self.prices_normalized = self.prices/self.prices[0] # Normalize price to start from $1
+        self.prices_normalized = self.prices/self.prices.iloc[0] # Normalize price to start from $1
         self.returns = self.prices.pct_change()
         self.returns = self.returns[1:]  # delete first row - pct_change() returns first row as NaN
 
