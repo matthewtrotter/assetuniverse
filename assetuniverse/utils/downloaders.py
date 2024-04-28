@@ -1,10 +1,7 @@
 import appdirs
-import arrow
 import diskcache
 from time import sleep, time
 import ib_insync
-import logging
-from typing import List, Dict
 import yfinance as yf
 import pandas_datareader.data as web
 

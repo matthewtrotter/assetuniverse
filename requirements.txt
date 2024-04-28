@@ -1,5 +1,4 @@
 appdirs
-arrow
 diskcache
 ib_insync
 numpy

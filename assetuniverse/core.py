@@ -6,7 +6,7 @@ import numpy as np
 from pandas import DataFrame, to_datetime, date_range
 import pandas as pd
 import plotly.express as px
-from typing import List, Optional
+from typing import List
 
 # Use these when importing assetuniverse as a library
 from .utils.asset import Asset
