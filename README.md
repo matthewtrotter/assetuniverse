@@ -10,7 +10,7 @@ Download historical daily prices and returns of stocks, futures, cryptocurrencie
 - [Federal Reserve Economic Database](https://fred.stlouisfed.org)
 
 ## Installing
-Install the [package with pip](https://pypi.org/project/assetuniverse/0.1.0/#description):
+Install the [package with pip](https://pypi.org/project/assetuniverse/):
 ```bash
 pip install assetuniverse
 ```
