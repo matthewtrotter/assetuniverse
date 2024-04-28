@@ -60,7 +60,8 @@ class AssetUniverse:
 
         # Join all closes together on same date axis
         joined_prices = self._join_prices(prices_list)
-        self.last_dates_downloaded = pd.concat((ibd.last_dates_downloaded, yfd.last_dates_downloaded, fd.last_dates_downloaded, od.last_dates_downloaded))
+        d = [d for d in [ibd.last_dates_downloaded, yfd.last_dates_downloaded, fd.last_dates_downloaded, od.last_dates_downloaded] if d is not None and not d.empty]
+        self.last_dates_downloaded = pd.concat(d)
 
         # Rename cash and borrow rate
         cashname = 'Cash'
@@ -116,7 +117,7 @@ class AssetUniverse:
 
         # Forward fill all the NaNs and zeros
         joined_prices[joined_prices == 0] = np.nan
-        joined_prices.fillna(method="ffill", inplace=True)
+        joined_prices.ffill(inplace=True)
         joined_prices.dropna(axis=0, how="any", inplace=True)
 
         # # Forward-fill cash closes - Do I need this part?
