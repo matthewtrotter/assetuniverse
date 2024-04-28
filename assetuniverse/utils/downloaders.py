@@ -8,6 +8,7 @@ import pandas_datareader.data as web
 import datetime
 from pandas import DataFrame, date_range, Series
 import numpy as np
+from typing import Union
 
 class Downloader:
     def __init__(self, start, end, tickers) -> None:
@@ -16,8 +17,8 @@ class Downloader:
         self.tickers = tickers
         self.last_dates_downloaded = None
 
-    def _calculate_last_date_downloaded(self, closes: DataFrame) -> None:
-        self.last_dates_downloaded = closes.apply(Series.last_valid_index)
+    def _calculate_last_date_downloaded(self, closes: DataFrame) -> Union[None, Series]:
+        self.last_dates_downloaded = closes.apply(Series.last_valid_index)  # type: Series
 
 class InteractiveBrokersDownloader(Downloader):
     def __init__(self, start, end, tickers, currencies, exchanges) -> None:
@@ -173,14 +174,14 @@ class FredDownloader(Downloader):
                 'fred', 
                 self.start, 
                 self.end+datetime.timedelta(1)
-                )
+                )   # type: DataFrame
             closes = closes.rename(columns={closes.columns[0]: ticker})
 
             # Reindex tickers that aren't updated often
             if ticker in ['Fed Funds Rate',]:
                 idx = date_range(start=self.start, end=self.end, freq='D')
                 closes = closes.reindex(idx)
-                closes.fillna(method="ffill", inplace=True)
+                closes.ffill(inplace=True)
         super()._calculate_last_date_downloaded(closes)
         return closes
 
