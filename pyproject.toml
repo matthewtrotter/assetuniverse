@@ -3,15 +3,15 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "assetuniverse-test"
-version = "0.1.1"
+name = "assetuniverse"
+version = "0.1.0"
 authors = [
   {name="Matthew Trotter"},
 ]
 description = "A downloader of historical daily returns for multiple investable assets with some analysis tools too."
 readme = "README.md"
 license = {text = "GPL-3.0-or-later"}
-requires-python = ">=3.6"
+requires-python = ">=3.7"
 keywords = ["historical returns", "returns", "daily returns", "stocks", "futures", "commodities", "interactive brokers", "yahoo finance", "fred"]
 classifiers = [
     "Programming Language :: Python :: 3",

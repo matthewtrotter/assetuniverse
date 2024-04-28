@@ -26,8 +26,11 @@ jobs:
     - name: Test with pytest
       run: pytest test.py
 
-  publish:
+  release:
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
     needs: test
     steps:
     - name: Checkout
@@ -43,12 +46,5 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Build artifacts
       run: python -m build
-      env:
-        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-    - name: Publish package to TestPyPI        
-      run: |
-        python3 -m twine upload --skip-existing --non-interactive --verbose --password $TWINE_PASSWORD dist/*
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
